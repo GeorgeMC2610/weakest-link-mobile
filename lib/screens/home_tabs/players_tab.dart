@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:weakest_link/screens/shared_views/add_player.dart';
 import 'dart:math' as math;
 
+import '../../classes/player.dart';
+
 class PlayersTab extends StatelessWidget {
   final List<Player> allPlayers;
   final List<Player> selectedPlayers;

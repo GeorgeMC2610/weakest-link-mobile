@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Player {
-  final String name;
-  final Color color;
-
-  Player({required this.name, required this.color});
-}
+import '../../classes/player.dart';
 
 class AddPlayerDialog extends StatefulWidget {
   const AddPlayerDialog({super.key});

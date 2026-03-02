@@ -3,6 +3,9 @@ import 'package:weakest_link/screens/shared_views/add_player.dart';
 import 'package:weakest_link/screens/home_tabs/players_tab.dart';
 import 'package:weakest_link/screens/home_tabs/collections_tab.dart';
 import 'package:weakest_link/screens/home_tabs/settings_tab.dart';
+import 'package:weakest_link/screens/round_start.dart';
+
+import '../classes/player.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -158,8 +161,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       fontWeight: FontWeight.bold,
                     )),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Starting Game...')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => RoundStart(
+                        players: _selectedPlayers,
+                        roundNumber: 1,
+                      ),
+                    ),
                   );
                 })
             : null,
