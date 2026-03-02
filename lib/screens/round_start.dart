@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'dart:math' as math;
 
+import 'package:weakest_link/screens/playing_round.dart';
+
 class RoundStart extends StatefulWidget {
   final List<Player> players;
   final int roundNumber;
@@ -50,7 +52,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final totalSeconds = 150 - (10 * (widget.roundNumber - 1));
+    final totalSeconds = 5; // 150 - (10 * (widget.roundNumber - 1));
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     final formattedTime = '$minutes:${seconds.toString().padLeft(2, '0')}';
@@ -170,7 +172,15 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                     height: 60,
                     child: FilledButton.tonal(
                       onPressed: () {
-                        // Logic to start the round timer
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PlayingRound(
+                              players: widget.players,
+                              roundNumber: widget.roundNumber,
+                              totalSeconds: totalSeconds,
+                            ),
+                          ),
+                        );
                       },
                       child: const Text(
                         'CLOCK!',
