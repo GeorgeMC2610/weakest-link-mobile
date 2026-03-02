@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:weakest_link/screens/shared_views/add_player.dart';
 import 'package:weakest_link/screens/home_tabs/players_tab.dart';
 import 'package:weakest_link/screens/home_tabs/collections_tab.dart';
 import 'package:weakest_link/screens/home_tabs/settings_tab.dart';
