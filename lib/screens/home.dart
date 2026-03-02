@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:weakest_link/screens/shared_views/add_player.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -8,8 +9,14 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final List<String> _allPlayers = ['Alice', 'Bob', 'Charlie', 'David', 'Eve'];
-  final List<String> _selectedPlayers = [];
+  final List<Player> _allPlayers = [
+    Player(name: 'Alice', color: Colors.blue),
+    Player(name: 'Bob', color: Colors.red),
+    Player(name: 'Charlie', color: Colors.green),
+    Player(name: 'David', color: Colors.orange),
+    Player(name: 'Eve', color: Colors.purple),
+  ];
+  final List<Player> _selectedPlayers = [];
 
   final List<String> _allQuestionCollections = [
     'Default',
@@ -17,13 +24,13 @@ class _HomeState extends State<Home> {
     'My Collection 2',
     'My Collection 3',
   ];
-  final List<String> _selectedQuestionTypes = [];
+  final List<String> _selectedQuestionCollections = [];
 
   bool _isTimerEnabled = true;
   bool _isSoundEnabled = true;
 
   bool get _canStartGame =>
-      _selectedPlayers.length >= 2 && _selectedQuestionTypes.isNotEmpty;
+      _selectedPlayers.length >= 2 && _selectedQuestionCollections.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -36,51 +43,15 @@ class _HomeState extends State<Home> {
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Players'),
-              Tab(text: 'Questions'),
+              Tab(text: 'Question Collections'),
               Tab(text: 'Settings'),
             ],
           ),
         ),
         body: TabBarView(
           children: [
-            _buildSelectionTab(
-              items: _allPlayers,
-              selectedItems: _selectedPlayers,
-              showColorDot: true,
-              onToggle: (item) {
-                setState(() {
-                  if (_selectedPlayers.contains(item)) {
-                    _selectedPlayers.remove(item);
-                  } else {
-                    _selectedPlayers.add(item);
-                  }
-                });
-              },
-              onAdd: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Add Player clicked')),
-                );
-              },
-            ),
-            _buildSelectionTab(
-              items: _allQuestionCollections,
-              selectedItems: _selectedQuestionTypes,
-              showSubtitle: true,
-              onToggle: (item) {
-                setState(() {
-                  if (_selectedQuestionTypes.contains(item)) {
-                    _selectedQuestionTypes.remove(item);
-                  } else {
-                    _selectedQuestionTypes.add(item);
-                  }
-                });
-              },
-              onAdd: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Add Question Type clicked')),
-                );
-              },
-            ),
+            _buildPlayersTab(),
+            _buildCollectionsTab(),
             _buildSettingsTab(),
           ],
         ),
@@ -102,14 +73,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildSelectionTab({
-    required List<String> items,
-    required List<String> selectedItems,
-    required Function(String) onToggle,
-    required VoidCallback onAdd,
-    bool showColorDot = false,
-    bool showSubtitle = false,
-  }) {
+  Widget _buildPlayersTab() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -119,53 +83,108 @@ class _HomeState extends State<Home> {
             spacing: 8.0,
             runSpacing: 4.0,
             children: [
-              ...items.map((item) {
-                final isSelected = selectedItems.contains(item);
-                // Imaginary count for demonstration
+              ..._allPlayers.map((player) {
+                final isSelected = _selectedPlayers.contains(player);
+                return FilterChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(player.name),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: player.color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ),
+                  selected: isSelected,
+                  onSelected: (_) {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedPlayers.remove(player);
+                      } else {
+                        _selectedPlayers.add(player);
+                      }
+                    });
+                  },
+                );
+              }),
+              ActionChip(
+                avatar: const Icon(Icons.add),
+                label: const Text('Add'),
+                onPressed: () async {
+                  final newPlayer = await showDialog<Player>(
+                    context: context,
+                    builder: (context) => const AddPlayerDialog(),
+                  );
+                  if (newPlayer != null) {
+                    setState(() {
+                      _allPlayers.add(newPlayer);
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollectionsTab() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: [
+              ..._allQuestionCollections.map((item) {
+                final isSelected = _selectedQuestionCollections.contains(item);
                 final count = (item.length * 7) % 50 + 10;
                 return FilterChip(
                   label: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(item),
-                          if (showColorDot) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: Colors.primaries[
-                                    items.indexOf(item) % Colors.primaries.length],
-                                shape: BoxShape.circle,
-                              ),
+                      Text(item),
+                      Text(
+                        '$count questions',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontSize: 10,
                             ),
-                          ],
-                        ],
                       ),
-                      if (showSubtitle)
-                        Text(
-                          '$count questions',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.onPrimaryContainer
-                                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                                fontSize: 10,
-                              ),
-                        ),
                     ],
                   ),
                   selected: isSelected,
-                  onSelected: (_) => onToggle(item),
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        _selectedQuestionCollections.add(item);
+                      } else {
+                        _selectedQuestionCollections.remove(item);
+                      }
+                    });
+                  },
                 );
               }),
               ActionChip(
                 avatar: const Icon(Icons.add),
                 label: const Text('Add'),
-                onPressed: onAdd,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Add Question Collection clicked')),
+                  );
+                },
               ),
             ],
           ),
