@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
+import 'package:weakest_link/screens/voting_phase.dart';
 
 class PlayingRound extends StatefulWidget {
   final List<Player> players;
@@ -304,8 +305,15 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                         height: 56,
                         child: FilledButton(
                           onPressed: () {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).pop();
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => VotingPhase(
+                                  players: widget.players,
+                                  strongestLink: widget.players[0],
+                                  weakestLink: widget.players.last,
+                                ),
+                              ),
+                            );
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: Theme.of(context).colorScheme.primary,
