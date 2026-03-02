@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
+import 'package:weakest_link/screens/last_round.dart';
 import 'dart:math' as math;
 
 import 'package:weakest_link/screens/playing_round.dart';
@@ -173,11 +174,18 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                     child: FilledButton.tonal(
                       onPressed: () {
                         Navigator.of(context).push(
+                          // MaterialPageRoute(
+                          //   builder: (context) => PlayingRound(
+                          //     players: widget.players,
+                          //     roundNumber: widget.roundNumber,
+                          //     totalSeconds: totalSeconds,
+                          //   ),
+                          // ),
+
                           MaterialPageRoute(
-                            builder: (context) => PlayingRound(
-                              players: widget.players,
-                              roundNumber: widget.roundNumber,
-                              totalSeconds: totalSeconds,
+                            builder: (context) => LastRound(
+                              finalists: [widget.players.first, widget.players.last],
+                              grandPrize: 1500,
                             ),
                           ),
                         );
