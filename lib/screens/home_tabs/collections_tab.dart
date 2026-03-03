@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:weakest_link/classes/question_collection.dart';
 
 class CollectionsTab extends StatelessWidget {
-  final List<String> allCollections;
-  final List<String> selectedCollections;
-  final Function(String, bool) onToggleSelection;
+  final List<QuestionCollection> allCollections;
+  final List<QuestionCollection> selectedCollections;
+  final Function(QuestionCollection, bool) onToggleSelection;
   final VoidCallback onAddCollection;
 
   const CollectionsTab({
@@ -25,15 +26,15 @@ class CollectionsTab extends StatelessWidget {
             spacing: 8.0,
             runSpacing: 4.0,
             children: [
-              ...allCollections.map((item) {
-                final isSelected = selectedCollections.contains(item);
-                final count = (item.length * 7) % 50 + 10;
+              ...allCollections.map((collection) {
+                final isSelected = selectedCollections.contains(collection);
+                final count = collection.questions.length;
                 return FilterChip(
                   label: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item),
+                      Text(collection.title),
                       Text(
                         '$count questions',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -46,7 +47,7 @@ class CollectionsTab extends StatelessWidget {
                     ],
                   ),
                   selected: isSelected,
-                  onSelected: (selected) => onToggleSelection(item, selected),
+                  onSelected: (selected) => onToggleSelection(collection, selected),
                 );
               }),
               ActionChip(

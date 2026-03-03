@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:weakest_link/classes/player.dart';
+import 'package:weakest_link/classes/question_collection.dart';
 import 'package:weakest_link/screens/home_tabs/players_tab.dart';
 import 'package:weakest_link/screens/home_tabs/collections_tab.dart';
 import 'package:weakest_link/screens/home_tabs/settings_tab.dart';
 import 'package:weakest_link/screens/round_start.dart';
-
-import '../classes/player.dart';
+import 'package:weakest_link/services/player_service.dart';
+import 'package:weakest_link/services/question_service.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -14,22 +16,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
-  final List<Player> _allPlayers = [
-    Player(name: 'Alice', color: Colors.blue),
-    Player(name: 'Bob', color: Colors.red),
-    Player(name: 'Charlie', color: Colors.green),
-    Player(name: 'David', color: Colors.orange),
-    Player(name: 'Eve', color: Colors.purple),
-  ];
+  List<Player> _allPlayers = [];
   final List<Player> _selectedPlayers = [];
 
-  final List<String> _allQuestionCollections = [
-    'Default',
-    'My Collection 1',
-    'My Collection 2',
-    'My Collection 3',
-  ];
-  final List<String> _selectedQuestionCollections = [];
+  List<QuestionCollection> _allQuestionCollections = [];
+  final List<QuestionCollection> _selectedQuestionCollections = [];
 
   bool _isTimerEnabled = true;
   bool _isSoundEnabled = true;
@@ -40,10 +31,18 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _loadData();
     _shakeController = AnimationController(
       duration: const Duration(milliseconds: 100),
       vsync: this,
     );
+  }
+
+  void _loadData() {
+    setState(() {
+      _allPlayers = PlayerService.getAllPlayers();
+      _allQuestionCollections = QuestionService.getAllCollections();
+    });
   }
 
   @override
@@ -85,7 +84,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Players'),
-              Tab(text: 'Question Collections'),
+              Tab(text: 'Collections'),
               Tab(text: 'Settings'),
             ],
           ),
@@ -107,16 +106,16 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 });
               },
               onToggleEditing: _toggleEditingPlayers,
-              onAddPlayer: (player) {
-                setState(() {
-                  _allPlayers.add(player);
-                });
+              onAddPlayer: (player) async {
+                await PlayerService.addPlayer(player);
+                _loadData();
               },
-              onDeletePlayer: (player) {
+              onDeletePlayer: (player) async {
+                await PlayerService.deletePlayer(player);
                 setState(() {
-                  _allPlayers.remove(player);
                   _selectedPlayers.remove(player);
                 });
+                _loadData();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('${player.name} removed'),
@@ -164,7 +163,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     MaterialPageRoute(
                       builder: (context) => RoundStart(
                         players: _selectedPlayers,
-                        roundNumber: 1,
+                        roundNumber: 1, questions: [],
                       ),
                     ),
                   );

@@ -83,7 +83,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             final name = _nameController.text.trim();
             if (name.isNotEmpty) {
               Navigator.of(context).pop(
-                Player(name: name, color: currentColor),
+                Player(name: name, colorValue: currentColor.value),
               );
             }
           },
