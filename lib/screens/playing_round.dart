@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/screens/voting_phase.dart';
@@ -35,7 +36,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
   // Animation logic for the starting lights
   late AnimationController _startLightsController;
-  int _blinkCount = 0;
 
   // Placeholder question logic
   String _currentQuestion = "Who was the first President of the United States?";
@@ -49,28 +49,19 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
     _startLightsController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 1400),
     );
 
     _startLightsController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        if (_blinkCount < 3) {
-          _blinkCount++;
-          _startLightsController.reverse();
-        } else {
-          setState(() {
-            _isStarting = false;
-            _startRound();
-          });
-        }
-      } else if (status == AnimationStatus.dismissed) {
-        if (_blinkCount < 4) {
-          _startLightsController.forward();
-        }
+        setState(() {
+          _isStarting = false;
+          _startRound();
+        });
       }
     });
 
-    // Start the blink animation
+    // Start the animation sequence
     _startLightsController.forward();
   }
 
@@ -147,26 +138,12 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
           child: AnimatedBuilder(
             animation: _startLightsController,
             builder: (context, child) {
-              return Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.blue.withOpacity(_startLightsController.value), width: 10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(_startLightsController.value * 0.5),
-                      blurRadius: 40,
-                      spreadRadius: 10,
-                    )
-                  ],
+              return CustomPaint(
+                painter: StartingLightsPainter(
+                  progress: _startLightsController.value,
+                  roundNumber: widget.roundNumber,
                 ),
-                child: Center(
-                  child: Text(
-                    "ROUND ${widget.roundNumber}",
-                    style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ),
+                size: const Size(300, 300),
               );
             },
           ),
@@ -383,4 +360,88 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
       ),
     );
   }
+}
+
+class StartingLightsPainter extends CustomPainter {
+  final double progress;
+  final int roundNumber;
+
+  StartingLightsPainter({required this.progress, required this.roundNumber});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = 80.0;
+    final lineLength = 30.0;
+    final paint = Paint()
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
+
+    // Index mapping for the 8 bars forming a circle:
+    // 0: Right (--)
+    // 1: Bottom-Right (\)
+    // 2: Bottom (|)
+    // 3: Bottom-Left (/)
+    // 4: Left (--)
+    // 5: Top-Left (\)
+    // 6: Top (|)
+    // 7: Top-Right (/)
+
+    for (int i = 0; i < 8; i++) {
+      final angle = i * math.pi / 4;
+      
+      Color color = Colors.grey.withOpacity(0.2);
+      
+      // Animation phases (total 900ms):
+      // 0.0 - 0.33 (300ms): Left (4) and Right (0) light blue
+      // 0.33 - 0.66 (300ms): + Top-Left (5) and Bottom-Right (1) light blue
+      // 0.66 - 1.0 (300ms): All indigo
+      
+      if (progress > 0.40) {
+        color = Colors.indigo;
+      } else if (progress > 0.15) {
+        if (i == 0 || i == 1 || i == 5 || i == 4) {
+          color = Colors.lightBlueAccent;
+        }
+      } else if (progress > 0) {
+        if (i == 0 || i == 4) {
+          color = Colors.lightBlueAccent;
+        }
+      }
+
+      paint.color = color;
+
+      final start = Offset(
+        center.dx + (radius - lineLength / 2) * math.cos(angle),
+        center.dy + (radius - lineLength / 2) * math.sin(angle),
+      );
+      final end = Offset(
+        center.dx + (radius + lineLength / 2) * math.cos(angle),
+        center.dy + (radius + lineLength / 2) * math.sin(angle),
+      );
+      canvas.drawLine(start, end, paint);
+    }
+    
+    // Draw Round Text in the middle
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: "ROUND $roundNumber",
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    
+    textPainter.paint(
+      canvas,
+      center - Offset(textPainter.width / 2, textPainter.height / 2),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant StartingLightsPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
