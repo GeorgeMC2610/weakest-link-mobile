@@ -1,6 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:weakest_link/classes/question_collection.dart';
 import 'package:weakest_link/classes/question.dart';
+import 'package:weakest_link/seeds/default_collection.dart';
 
 class QuestionService {
   static const String _boxName = 'question_collections';
@@ -9,14 +10,9 @@ class QuestionService {
     await Hive.openBox<QuestionCollection>(_boxName);
     
     // Add default collection if empty
-    if (getAllCollections().isEmpty) {
-      await addCollection(QuestionCollection(
-        title: 'General Knowledge',
-        questions: [
-          Question(title: 'What is the capital of France?', answer: 'Paris', difficulty: 1),
-          Question(title: 'Who wrote Hamlet?', answer: 'Shakespeare', difficulty: 2),
-        ],
-      ));
+    final defaultCollection = getAllCollections().any((c) => c.title == DefaultQuestionCollection.getDefaultSeed().title);
+    if (!defaultCollection) {
+      await addCollection(DefaultQuestionCollection.getDefaultSeed());
     }
   }
 
