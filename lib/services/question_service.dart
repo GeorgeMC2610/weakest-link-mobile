@@ -35,6 +35,10 @@ class QuestionService {
     await _box.add(collection);
   }
 
+  static Future<void> updateCollection(dynamic key, QuestionCollection collection) async {
+    await _box.put(key, collection);
+  }
+
   static Future<void> deleteCollection(QuestionCollection collection) async {
     await collection.delete();
   }

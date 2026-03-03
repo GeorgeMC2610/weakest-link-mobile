@@ -4,6 +4,7 @@ import 'package:weakest_link/classes/question_collection.dart';
 import 'package:weakest_link/screens/home_tabs/players_tab.dart';
 import 'package:weakest_link/screens/home_tabs/collections_tab.dart';
 import 'package:weakest_link/screens/home_tabs/settings_tab.dart';
+import 'package:weakest_link/screens/question_collections.dart';
 import 'package:weakest_link/screens/round_start.dart';
 import 'package:weakest_link/services/player_service.dart';
 import 'package:weakest_link/services/question_service.dart';
@@ -137,8 +138,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 });
               },
               onAddCollection: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Add Question Collection clicked')),
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const QuestionCollections()
+                  )
                 );
               },
             ),

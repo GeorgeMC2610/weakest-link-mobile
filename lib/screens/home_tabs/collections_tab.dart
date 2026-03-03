@@ -51,8 +51,8 @@ class CollectionsTab extends StatelessWidget {
                 );
               }),
               ActionChip(
-                avatar: const Icon(Icons.add),
-                label: const Text('Add'),
+                avatar: const Icon(Icons.menu),
+                label: const Text('Manage'),
                 onPressed: onAddCollection,
               ),
             ],
