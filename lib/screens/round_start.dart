@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
-import 'package:weakest_link/screens/last_round.dart';
+import 'package:weakest_link/classes/question.dart';
 import 'dart:math' as math;
 
 import 'package:weakest_link/screens/playing_round.dart';
 
 class RoundStart extends StatefulWidget {
   final List<Player> players;
+  final List<Question> questions;
   final int roundNumber;
 
   const RoundStart({
     super.key,
     required this.players,
+    required this.questions,
     required this.roundNumber,
   });
 
@@ -53,7 +55,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final totalSeconds = 5; // 150 - (10 * (widget.roundNumber - 1));
+    final totalSeconds = 150 - (10 * (widget.roundNumber - 1));
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     final formattedTime = '$minutes:${seconds.toString().padLeft(2, '0')}';
@@ -174,18 +176,12 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                     child: FilledButton.tonal(
                       onPressed: () {
                         Navigator.of(context).push(
-                          // MaterialPageRoute(
-                          //   builder: (context) => PlayingRound(
-                          //     players: widget.players,
-                          //     roundNumber: widget.roundNumber,
-                          //     totalSeconds: totalSeconds,
-                          //   ),
-                          // ),
-
                           MaterialPageRoute(
-                            builder: (context) => LastRound(
-                              finalists: [widget.players.first, widget.players.last],
-                              grandPrize: 1500,
+                            builder: (context) => PlayingRound(
+                              questions: [],
+                              players: widget.players,
+                              roundNumber: widget.roundNumber,
+                              totalSeconds: totalSeconds,
                             ),
                           ),
                         );
@@ -223,24 +219,20 @@ class SparklePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final random = math.Random(42); // Fixed seed for consistent points during a single draw call
+    final random = math.Random(42);
     final paint = Paint()..style = PaintingStyle.fill;
 
     for (var i = 0; i < points.length; i++) {
       final point = points[i];
-      // Distribute points around the size
       final x = point.dx * size.width;
       final y = point.dy * size.height;
 
-      // Calculate individual sparkle animation
-      // Each sparkle has a slightly different phase
       final phase = (animationValue + point.dx) % 1.0;
       final opacity = math.sin(phase * math.pi).abs();
       final scale = 0.5 + opacity * 1.5;
 
       paint.color = color.withOpacity(opacity * 0.6);
       
-      // Draw a small star or dot
       canvas.drawCircle(Offset(x, y), scale, paint);
     }
   }

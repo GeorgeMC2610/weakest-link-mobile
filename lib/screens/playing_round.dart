@@ -1,16 +1,21 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
+import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/screens/voting_phase.dart';
+import 'package:weakest_link/services/game_manager.dart';
 
 class PlayingRound extends StatefulWidget {
   final List<Player> players;
+  final List<Question> questions;
   final int roundNumber;
   final int totalSeconds;
 
   const PlayingRound({
     super.key,
     required this.players,
+    required this.questions,
     required this.roundNumber,
     required this.totalSeconds,
   });
@@ -35,42 +40,34 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
   // Animation logic for the starting lights
   late AnimationController _startLightsController;
-  int _blinkCount = 0;
 
-  // Placeholder question logic
-  String _currentQuestion = "Who was the first President of the United States?";
-  String _currentAnswer = "George Washington";
+  // Question logic
+  int _currentQuestionIndex = 0;
+  late List<Question> _shuffledQuestions;
 
   @override
   void initState() {
     super.initState();
     _activePlayers = widget.players.where((p) => !p.isEliminated).toList();
     _remainingSeconds = widget.totalSeconds;
+    
+    _shuffledQuestions = List.from(widget.questions)..shuffle();
 
     _startLightsController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 900),
     );
 
     _startLightsController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        if (_blinkCount < 3) {
-          _blinkCount++;
-          _startLightsController.reverse();
-        } else {
-          setState(() {
-            _isStarting = false;
-            _startRound();
-          });
-        }
-      } else if (status == AnimationStatus.dismissed) {
-        if (_blinkCount < 4) {
-          _startLightsController.forward();
-        }
+        setState(() {
+          _isStarting = false;
+          _startRound();
+        });
       }
     });
 
-    // Start the blink animation
+    // Start the animation sequence
     _startLightsController.forward();
   }
 
@@ -101,12 +98,15 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void _nextPlayer() {
     setState(() {
       _currentPlayerIndex = (_currentPlayerIndex + 1) % _activePlayers.length;
+      _currentQuestionIndex = (_currentQuestionIndex + 1) % _shuffledQuestions.length;
     });
   }
 
   void _handleCorrect() {
     if (!_isRoundActive) return;
+    final currentPlayer = _activePlayers[_currentPlayerIndex];
     setState(() {
+      currentPlayer.rightAnswers++;
       if (_currentChainIndex < _pointsScale.length - 1) {
         _currentChainIndex++;
       }
@@ -116,7 +116,9 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
   void _handleWrong() {
     if (!_isRoundActive) return;
+    final currentPlayer = _activePlayers[_currentPlayerIndex];
     setState(() {
+      currentPlayer.wrongAnswers++;
       _currentChainIndex = 0;
       _nextPlayer();
     });
@@ -124,8 +126,11 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
   void _handleBank() {
     if (!_isRoundActive || _currentChainIndex == 0) return;
+    final currentPlayer = _activePlayers[_currentPlayerIndex];
     setState(() {
-      _totalBankedPoints += _pointsScale[_currentChainIndex];
+      final bankedAmount = _pointsScale[_currentChainIndex];
+      _totalBankedPoints += bankedAmount;
+      currentPlayer.pointsSaved += bankedAmount;
       _currentChainIndex = 0;
     });
   }
@@ -133,8 +138,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void _handleBurn() {
     if (!_isRoundActive) return;
     setState(() {
-      _currentQuestion = "What is the capital of France?";
-      _currentAnswer = "Paris";
+      _currentQuestionIndex = (_currentQuestionIndex + 1) % _shuffledQuestions.length;
     });
   }
 
@@ -147,26 +151,12 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
           child: AnimatedBuilder(
             animation: _startLightsController,
             builder: (context, child) {
-              return Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.blue.withOpacity(_startLightsController.value), width: 10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(_startLightsController.value * 0.5),
-                      blurRadius: 40,
-                      spreadRadius: 10,
-                    )
-                  ],
+              return CustomPaint(
+                painter: StartingLightsPainter(
+                  progress: _startLightsController.value,
+                  roundNumber: widget.roundNumber,
                 ),
-                child: Center(
-                  child: Text(
-                    "ROUND ${widget.roundNumber}",
-                    style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ),
+                size: const Size(300, 300),
               );
             },
           ),
@@ -175,6 +165,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     }
 
     final currentPlayer = _activePlayers[_currentPlayerIndex];
+    final currentQuestion = _shuffledQuestions[_currentQuestionIndex % _shuffledQuestions.length];
     final minutes = _remainingSeconds ~/ 60;
     final seconds = _remainingSeconds % 60;
     final timeStr = "$minutes:${seconds.toString().padLeft(2, '0')}";
@@ -207,7 +198,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
           Container(
             width: 100,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surface,
               border: Border(right: BorderSide(color: Theme.of(context).dividerColor)),
             ),
             child: Column(
@@ -280,7 +271,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                   
                   // Question & Answer
                   Text(
-                    _currentQuestion,
+                    currentQuestion.title,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -289,7 +280,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "($_currentAnswer)",
+                    "(${currentQuestion.answer})",
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.grey,
                       fontStyle: FontStyle.italic,
@@ -305,12 +296,13 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                         height: 56,
                         child: FilledButton(
                           onPressed: () {
+                            GameManager().determineLinks();
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
                                 builder: (context) => VotingPhase(
                                   players: widget.players,
-                                  strongestLink: widget.players[0],
-                                  weakestLink: widget.players.last,
+                                  strongestLink: GameManager().strongestLink,
+                                  weakestLink: GameManager().weakestLink,
                                 ),
                               ),
                             );
@@ -383,4 +375,88 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
       ),
     );
   }
+}
+
+class StartingLightsPainter extends CustomPainter {
+  final double progress;
+  final int roundNumber;
+
+  StartingLightsPainter({required this.progress, required this.roundNumber});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = 80.0;
+    final lineLength = 30.0;
+    final paint = Paint()
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round;
+
+    // Index mapping for the 8 bars forming a circle:
+    // 0: Right (--)
+    // 1: Bottom-Right (\)
+    // 2: Bottom (|)
+    // 3: Bottom-Left (/)
+    // 4: Left (--)
+    // 5: Top-Left (\)
+    // 6: Top (|)
+    // 7: Top-Right (/)
+
+    for (int i = 0; i < 8; i++) {
+      final angle = i * math.pi / 4;
+      
+      Color color = Colors.grey.withOpacity(0.1);
+      
+      // Animation phases (total 900ms):
+      // 0.0 - 0.33 (300ms): Left (4) and Right (0) light blue
+      // 0.33 - 0.66 (300ms): + Top-Left (5) and Top-Right (7) light blue
+      // 0.66 - 1.0 (300ms): All indigo
+      
+      if (progress > 0.66) {
+        color = Colors.indigo;
+      } else if (progress > 0.33) {
+        if (i == 0 || i == 4 || i == 5 || i == 7) {
+          color = Colors.lightBlueAccent;
+        }
+      } else if (progress > 0) {
+        if (i == 0 || i == 4) {
+          color = Colors.lightBlueAccent;
+        }
+      }
+
+      paint.color = color;
+
+      final start = Offset(
+        center.dx + (radius - lineLength / 2) * math.cos(angle),
+        center.dy + (radius - lineLength / 2) * math.sin(angle),
+      );
+      final end = Offset(
+        center.dx + (radius + lineLength / 2) * math.cos(angle),
+        center.dy + (radius + lineLength / 2) * math.sin(angle),
+      );
+      canvas.drawLine(start, end, paint);
+    }
+    
+    // Draw Round Text in the middle
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: "ROUND $roundNumber",
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    
+    textPainter.paint(
+      canvas,
+      center - Offset(textPainter.width / 2, textPainter.height / 2),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant StartingLightsPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
