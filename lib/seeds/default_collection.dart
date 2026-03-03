@@ -51,7 +51,8 @@ class DefaultQuestionCollection {
       Question(title: "Γαλλικός όρος μίας λέξης, για τον σταθμό επισκευής ή αλλαγής ελαστικών αυτοκινήτου.", answer: "βουλκανιζατέρ", difficulty: 1),
       Question(title: "Η Ελλάδα βρέχεται ή δεν βρέχεται από την Μαύρη Θάλασσα;", answer: "δεν βρέχεται", difficulty: 1),
       Question(title: "Ποιό εξάρτημα του αυτοκινήτου καθαρίζει τα καυσαέρια πριν βγουν από την εξάτμιση;", answer: "καταλύτης", difficulty: 1),
-      Question(title: "Με ποιο ψευδώνυμο συστηνόταν ο Walter White στους έμπορους ναρκωτικών στη σειρά breaking bad", answer: "Heisenberg", difficulty: 1),
+      Question(title: "Με ποιο ψευδώνυμο ήταν γνωστός ο Walter White στο κόσμο των ναρκωτικών στη σειρά Breaking Bad;", answer: "Heisenberg", difficulty: 1),
+      Question(title: "Σύμφωνα με το αρχαίο ρητό, τι ΔΕΝ είναι ένας Άνδρας όταν δισεξαμαρταίνει;", answer: "Σοφός", difficulty: 1),
     ];
 
     return QuestionCollection(
