@@ -43,7 +43,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
   // Question logic
   int _currentQuestionIndex = 0;
-  late List<Question> _shuffledQuestions;
+  late List<Question> _roundQuestions;
 
   @override
   void initState() {
@@ -51,7 +51,17 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     _activePlayers = widget.players.where((p) => !p.isEliminated).toList();
     _remainingSeconds = widget.totalSeconds;
     
-    _shuffledQuestions = List.from(widget.questions)..shuffle();
+    // Filter for difficulty < 5 for normal rounds
+    _roundQuestions = widget.questions
+        .where((q) => q.difficulty < 5)
+        .toList();
+    
+    // Fallback if no questions < 5 exist
+    if (_roundQuestions.isEmpty) {
+      _roundQuestions = List.from(widget.questions);
+    }
+    
+    _roundQuestions.shuffle();
 
     _startLightsController = AnimationController(
       vsync: this,
@@ -98,7 +108,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void _nextPlayer() {
     setState(() {
       _currentPlayerIndex = (_currentPlayerIndex + 1) % _activePlayers.length;
-      _currentQuestionIndex = (_currentQuestionIndex + 1) % _shuffledQuestions.length;
+      _currentQuestionIndex = (_currentQuestionIndex + 1) % _roundQuestions.length;
     });
   }
 
@@ -138,7 +148,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void _handleBurn() {
     if (!_isRoundActive) return;
     setState(() {
-      _currentQuestionIndex = (_currentQuestionIndex + 1) % _shuffledQuestions.length;
+      _currentQuestionIndex = (_currentQuestionIndex + 1) % _roundQuestions.length;
     });
   }
 
@@ -165,7 +175,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     }
 
     final currentPlayer = _activePlayers[_currentPlayerIndex];
-    final currentQuestion = _shuffledQuestions[_currentQuestionIndex % _shuffledQuestions.length];
+    final currentQuestion = _roundQuestions[_currentQuestionIndex % _roundQuestions.length];
     final minutes = _remainingSeconds ~/ 60;
     final seconds = _remainingSeconds % 60;
     final timeStr = "$minutes:${seconds.toString().padLeft(2, '0')}";
