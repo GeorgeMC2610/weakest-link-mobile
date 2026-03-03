@@ -207,7 +207,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
           Container(
             width: 100,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surface,
               border: Border(right: BorderSide(color: Theme.of(context).dividerColor)),
             ),
             child: Column(

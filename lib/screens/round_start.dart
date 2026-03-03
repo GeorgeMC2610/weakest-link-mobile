@@ -3,8 +3,6 @@ import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/screens/last_round.dart';
 import 'dart:math' as math;
 
-import 'package:weakest_link/screens/playing_round.dart';
-
 class RoundStart extends StatefulWidget {
   final List<Player> players;
   final int roundNumber;
