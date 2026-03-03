@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question_collection.dart';
 import 'package:weakest_link/screens/home_tabs/players_tab.dart';
 import 'package:weakest_link/screens/home_tabs/collections_tab.dart';
 import 'package:weakest_link/screens/home_tabs/settings_tab.dart';
-import 'package:weakest_link/screens/question_collections.dart';
 import 'package:weakest_link/screens/round_start.dart';
 import 'package:weakest_link/services/player_service.dart';
 import 'package:weakest_link/services/question_service.dart';
+import 'package:weakest_link/screens/question_collections.dart';
+
+import '../classes/question.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -17,10 +20,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
-  List<Player> _allPlayers = [];
   final List<Player> _selectedPlayers = [];
-
-  List<QuestionCollection> _allQuestionCollections = [];
   final List<QuestionCollection> _selectedQuestionCollections = [];
 
   bool _isTimerEnabled = true;
@@ -32,18 +32,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _loadData();
     _shakeController = AnimationController(
       duration: const Duration(milliseconds: 100),
       vsync: this,
     );
-  }
-
-  void _loadData() {
-    setState(() {
-      _allPlayers = PlayerService.getAllPlayers();
-      _allQuestionCollections = QuestionService.getAllCollections();
-    });
   }
 
   @override
@@ -92,56 +84,66 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         ),
         body: TabBarView(
           children: [
-            PlayersTab(
-              allPlayers: _allPlayers,
-              selectedPlayers: _selectedPlayers,
-              isEditing: _isEditingPlayers,
-              shakeController: _shakeController,
-              onToggleSelection: (player) {
-                setState(() {
-                  if (_selectedPlayers.contains(player)) {
-                    _selectedPlayers.remove(player);
-                  } else {
-                    _selectedPlayers.add(player);
-                  }
-                });
-              },
-              onToggleEditing: _toggleEditingPlayers,
-              onAddPlayer: (player) async {
-                await PlayerService.addPlayer(player);
-                _loadData();
-              },
-              onDeletePlayer: (player) async {
-                await PlayerService.deletePlayer(player);
-                setState(() {
-                  _selectedPlayers.remove(player);
-                });
-                _loadData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${player.name} removed'),
-                    duration: const Duration(seconds: 1),
-                  ),
+            ValueListenableBuilder<Box<Player>>(
+              valueListenable: PlayerService.listenable,
+              builder: (context, box, _) {
+                final allPlayers = box.values.toList();
+                // Clean up selected players if any were deleted
+                _selectedPlayers.removeWhere((p) => !allPlayers.contains(p));
+                
+                return PlayersTab(
+                  allPlayers: allPlayers,
+                  selectedPlayers: _selectedPlayers,
+                  isEditing: _isEditingPlayers,
+                  shakeController: _shakeController,
+                  onToggleSelection: (player) {
+                    setState(() {
+                      if (_selectedPlayers.contains(player)) {
+                        _selectedPlayers.remove(player);
+                      } else {
+                        _selectedPlayers.add(player);
+                      }
+                    });
+                  },
+                  onToggleEditing: _toggleEditingPlayers,
+                  onAddPlayer: (player) async {
+                    await PlayerService.addPlayer(player);
+                  },
+                  onDeletePlayer: (player) async {
+                    await PlayerService.deletePlayer(player);
+                    setState(() {
+                      _selectedPlayers.remove(player);
+                    });
+                  },
                 );
               },
             ),
-            CollectionsTab(
-              allCollections: _allQuestionCollections,
-              selectedCollections: _selectedQuestionCollections,
-              onToggleSelection: (collection, isSelected) {
-                setState(() {
-                  if (isSelected) {
-                    _selectedQuestionCollections.add(collection);
-                  } else {
-                    _selectedQuestionCollections.remove(collection);
-                  }
-                });
-              },
-              onAddCollection: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const QuestionCollections()
-                  )
+            ValueListenableBuilder<Box<QuestionCollection>>(
+              valueListenable: QuestionService.listenable,
+              builder: (context, box, _) {
+                final allCollections = box.values.toList();
+                // Clean up selected collections if any were deleted
+                _selectedQuestionCollections.removeWhere((c) => !allCollections.contains(c));
+
+                return CollectionsTab(
+                  allCollections: allCollections,
+                  selectedCollections: _selectedQuestionCollections,
+                  onToggleSelection: (collection, isSelected) {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedQuestionCollections.add(collection);
+                      } else {
+                        _selectedQuestionCollections.remove(collection);
+                      }
+                    });
+                  },
+                  onAddCollection: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const QuestionCollections(),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -162,11 +164,18 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       fontWeight: FontWeight.bold,
                     )),
                 onPressed: () {
+                  // Collect all questions from selected collections
+                  final List<Question> allQuestions = [];
+                  for (var collection in _selectedQuestionCollections) {
+                    allQuestions.addAll(collection.questions);
+                  }
+                  
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => RoundStart(
                         players: _selectedPlayers,
-                        roundNumber: 1, questions: [],
+                        questions: allQuestions,
+                        roundNumber: 1,
                       ),
                     ),
                   );

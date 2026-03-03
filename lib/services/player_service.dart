@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:weakest_link/classes/player.dart';
 
@@ -9,6 +10,8 @@ class PlayerService {
   }
 
   static Box<Player> get _box => Hive.box<Player>(_boxName);
+
+  static ValueListenable<Box<Player>> get listenable => _box.listenable();
 
   static List<Player> getAllPlayers() {
     return _box.values.toList();

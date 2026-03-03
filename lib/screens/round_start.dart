@@ -178,6 +178,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => PlayingRound(
+                              questions: [],
                               players: widget.players,
                               roundNumber: widget.roundNumber,
                               totalSeconds: totalSeconds,

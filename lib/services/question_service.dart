@@ -27,6 +27,8 @@ class QuestionService {
 
   static Box<QuestionCollection> get _box => Hive.box<QuestionCollection>(_boxName);
 
+  static ValueListenable<Box<QuestionCollection>> get listenable => _box.listenable();
+
   static List<QuestionCollection> getAllCollections() {
     return _box.values.toList();
   }
