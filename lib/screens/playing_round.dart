@@ -27,7 +27,7 @@ class PlayingRound extends StatefulWidget {
 class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMixin {
   final List<int> _pointsScale = [0, 20, 50, 100, 200, 300, 450, 600, 800, 1000];
   int _currentChainIndex = 0;
-  int _totalBankedPoints = 0;
+  int _roundBankedPoints = 0;
   int _currentPlayerIndex = 0;
   late List<Player> _activePlayers;
 
@@ -129,7 +129,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     final currentPlayer = _activePlayers[_currentPlayerIndex];
     setState(() {
       final bankedAmount = _pointsScale[_currentChainIndex];
-      _totalBankedPoints += bankedAmount;
+      _roundBankedPoints += bankedAmount;
       currentPlayer.pointsSaved += bankedAmount;
       _currentChainIndex = 0;
     });
@@ -175,7 +175,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Banked: $_totalBankedPoints'),
+            Text('Banked: $_roundBankedPoints'),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
@@ -204,7 +204,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(_pointsScale.length, (index) {
-                // Display highest value at top
                 int reverseIndex = _pointsScale.length - 1 - index;
                 if (reverseIndex == 0) return const SizedBox.shrink();
                 
@@ -296,13 +295,19 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                         height: 56,
                         child: FilledButton(
                           onPressed: () {
+                            // 1. Add this round's banked points to the game total
+                            GameManager().addBankedPoints(_roundBankedPoints);
+                            
+                            // 2. Determine links based on this round's performance
                             GameManager().determineLinks();
+                            
+                            // 3. Push to Voting Phase
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
                                 builder: (context) => VotingPhase(
                                   players: widget.players,
-                                  strongestLink: GameManager().strongestLink,
-                                  weakestLink: GameManager().weakestLink,
+                                  strongestLink: GameManager().strongestLink!,
+                                  weakestLink: GameManager().weakestLink!,
                                 ),
                               ),
                             );
@@ -392,25 +397,10 @@ class StartingLightsPainter extends CustomPainter {
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round;
 
-    // Index mapping for the 8 bars forming a circle:
-    // 0: Right (--)
-    // 1: Bottom-Right (\)
-    // 2: Bottom (|)
-    // 3: Bottom-Left (/)
-    // 4: Left (--)
-    // 5: Top-Left (\)
-    // 6: Top (|)
-    // 7: Top-Right (/)
-
     for (int i = 0; i < 8; i++) {
       final angle = i * math.pi / 4;
       
       Color color = Colors.grey.withOpacity(0.1);
-      
-      // Animation phases (total 900ms):
-      // 0.0 - 0.33 (300ms): Left (4) and Right (0) light blue
-      // 0.33 - 0.66 (300ms): + Top-Left (5) and Top-Right (7) light blue
-      // 0.66 - 1.0 (300ms): All indigo
       
       if (progress > 0.66) {
         color = Colors.indigo;
@@ -437,7 +427,6 @@ class StartingLightsPainter extends CustomPainter {
       canvas.drawLine(start, end, paint);
     }
     
-    // Draw Round Text in the middle
     final textPainter = TextPainter(
       text: TextSpan(
         text: "ROUND $roundNumber",

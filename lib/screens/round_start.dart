@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
+import 'package:weakest_link/services/game_manager.dart';
 import 'dart:math' as math;
 
 import 'package:weakest_link/screens/playing_round.dart';
@@ -29,6 +30,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -37,6 +39,13 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    if (widget.roundNumber == 1) {
+      GameManager().startGame(
+        widget.players,
+        widget.questions
+      );
+    }
 
     final random = math.Random();
     _sparklePoints = List.generate(30, (index) {
@@ -55,7 +64,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final totalSeconds = 150 - (10 * (widget.roundNumber - 1));
+    final totalSeconds = 30 - (10 * (widget.roundNumber - 1));
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     final formattedTime = '$minutes:${seconds.toString().padLeft(2, '0')}';
@@ -178,8 +187,8 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => PlayingRound(
-                              questions: [],
-                              players: widget.players,
+                              questions: GameManager().allQuestions,
+                              players: GameManager().players,
                               roundNumber: widget.roundNumber,
                               totalSeconds: totalSeconds,
                             ),

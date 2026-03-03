@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
+import 'package:weakest_link/screens/last_round.dart';
+import 'package:weakest_link/screens/round_start.dart';
+import 'package:weakest_link/services/game_manager.dart';
 
 class VotingPhase extends StatefulWidget {
   final List<Player> players;
@@ -53,6 +56,11 @@ class _VotingPhaseState extends State<VotingPhase> {
   }
 
   void _confirmVotes() {
+    // Update votes count in player objects before proceeding
+    _votes.forEach((player, count) {
+      player.votes = count;
+    });
+
     int maxVotes = _votes.values.reduce((a, b) => a > b ? a : b);
     List<Player> tiedPlayers = _votes.entries
         .where((e) => e.value == maxVotes)
@@ -67,10 +75,38 @@ class _VotingPhaseState extends State<VotingPhase> {
   }
 
   void _eliminatePlayer(Player player) {
-    setState(() {
-      player.isEliminated = true;
-    });
-    Navigator.of(context).pop();
+    // 1. Mark as eliminated in the Game Manager
+    GameManager().eliminatePlayer(player);
+    
+    // 2. Clear round specific stats for the next round
+    GameManager().resetRoundStats();
+
+    // 3. Decide where to go next based on remaining players
+    if (GameManager().notEliminatedPlayers.length > 2) {
+      // Continue to next round
+      GameManager().incrementRoundNumber();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => RoundStart(
+            players: GameManager().players,
+            questions: GameManager().allQuestions,
+            roundNumber: GameManager().roundNumber,
+          ),
+        ),
+        (route) => route.isFirst, // Keep the Home screen at the bottom
+      );
+    } else {
+      // Transition to the Final Head-to-Head
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => LastRound(
+            finalists: GameManager().notEliminatedPlayers,
+            grandPrize: GameManager().totalBankedPoints,
+            allQuestions: GameManager().allQuestions,
+          ),
+        ),
+      );
+    }
   }
 
   void _showTieBreakerDialog(List<Player> tiedPlayers) {
@@ -79,7 +115,7 @@ class _VotingPhaseState extends State<VotingPhase> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("TIE BREAKER!"),
-        content: const Text("There's a tie. The Strongest Link must decide who is eliminated."),
+        content: Text("There's a tie between ${tiedPlayers.map((p) => p.name).join(", ")}. ${widget.strongestLink.name}, as the Strongest Link, must decide who is eliminated."),
         actions: tiedPlayers.map((p) => TextButton(
           onPressed: () {
             Navigator.of(context).pop();

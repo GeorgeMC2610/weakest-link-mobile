@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
+import 'package:weakest_link/classes/question.dart';
 
 class LastRound extends StatefulWidget {
   final List<Player> finalists;
   final int grandPrize;
+  final List<Question> allQuestions;
 
   const LastRound({
     super.key,
     required this.finalists,
     required this.grandPrize,
+    required this.allQuestions,
   });
 
   @override
@@ -28,8 +31,24 @@ class _LastRoundState extends State<LastRound> {
   bool _isSuddenDeath = false;
   Player? _winner;
 
-  String _currentQuestion = "In what year did the French Revolution begin?";
-  String _currentAnswer = "1789";
+  late List<Question> _finalQuestions;
+  int _currentQuestionIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Filter questions by difficulty 5 and shuffle
+    _finalQuestions = widget.allQuestions
+        .where((q) => q.difficulty == 5)
+        .toList();
+    
+    // Fallback if no difficulty 5 questions exist
+    if (_finalQuestions.isEmpty) {
+      _finalQuestions = List.from(widget.allQuestions);
+    }
+    
+    _finalQuestions.shuffle();
+  }
 
   void _handleAnswer(bool isCorrect) {
     if (_winner != null) return;
@@ -55,34 +74,25 @@ class _LastRoundState extends State<LastRound> {
         _currentPlayerIndex = 0;
       }
 
+      _currentQuestionIndex = (_currentQuestionIndex + 1) % _finalQuestions.length;
       _checkGameState();
-      
-      // Front-end placeholder question change
-      if (_winner == null) {
-        _currentQuestion = "Who wrote 'The Great Gatsby'?";
-        _currentAnswer = "F. Scott Fitzgerald";
-      }
     });
   }
 
   void _checkGameState() {
-    // Regular phase (5 questions each)
     if (!_isSuddenDeath) {
       int p1Remaining = 5 - _p1Asked;
       int p2Remaining = 5 - _p2Asked;
 
-      // Check if P1 won early
       if (_p1Correct > _p2Correct + p2Remaining) {
         _winner = widget.finalists[0];
         return;
       }
-      // Check if P2 won early
       if (_p2Correct > _p1Correct + p1Remaining) {
         _winner = widget.finalists[1];
         return;
       }
 
-      // Check for sudden death start
       if (_p1Asked == 5 && _p2Asked == 5) {
         if (_p1Correct == _p2Correct) {
           _isSuddenDeath = true;
@@ -91,9 +101,7 @@ class _LastRoundState extends State<LastRound> {
         }
       }
     } else {
-      // Sudden death phase
       if (_p1Asked == _p2Asked) {
-        // Evaluate after a full "round" of sudden death
         int p1SDResult = _player1Results.last == true ? 1 : 0;
         int p2SDResult = _player2Results.last == true ? 1 : 0;
 
@@ -107,6 +115,7 @@ class _LastRoundState extends State<LastRound> {
   @override
   Widget build(BuildContext context) {
     final currentPlayer = widget.finalists[_currentPlayerIndex];
+    final currentQuestion = _finalQuestions[_currentQuestionIndex % _finalQuestions.length];
 
     return Scaffold(
       appBar: AppBar(
@@ -119,12 +128,10 @@ class _LastRoundState extends State<LastRound> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // Score Board
             _buildScoreBoard(),
             const Spacer(),
             
             if (_winner == null) ...[
-              // Current Player
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
@@ -142,9 +149,8 @@ class _LastRoundState extends State<LastRound> {
               ),
               const SizedBox(height: 32),
               
-              // Question Area
               Text(
-                _currentQuestion,
+                currentQuestion.title,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -152,7 +158,7 @@ class _LastRoundState extends State<LastRound> {
               ),
               const SizedBox(height: 16),
               Text(
-                "($_currentAnswer)",
+                "(${currentQuestion.answer})",
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.grey,
                       fontStyle: FontStyle.italic,
@@ -160,7 +166,6 @@ class _LastRoundState extends State<LastRound> {
               ),
               const Spacer(),
               
-              // Controls
               Row(
                 children: [
                   Expanded(
@@ -191,7 +196,6 @@ class _LastRoundState extends State<LastRound> {
                 ],
               ),
             ] else ...[
-              // Winner View
               const Icon(Icons.emoji_events, size: 100, color: Colors.amber),
               const SizedBox(height: 16),
               Text(
