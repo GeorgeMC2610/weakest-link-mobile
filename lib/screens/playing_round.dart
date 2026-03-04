@@ -11,6 +11,7 @@ class PlayingRound extends StatefulWidget {
   final List<Question> questions;
   final int roundNumber;
   final int totalSeconds;
+  final int? playFirst; // 1: first, 2: second (for last round)
 
   const PlayingRound({
     super.key,
@@ -18,6 +19,7 @@ class PlayingRound extends StatefulWidget {
     required this.questions,
     required this.roundNumber,
     required this.totalSeconds,
+    this.playFirst,
   });
 
   @override
@@ -51,6 +53,31 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     _activePlayers = widget.players.where((p) => !p.isEliminated).toList();
     _remainingSeconds = widget.totalSeconds;
     
+    // Determine who starts
+    if (widget.roundNumber == 1) {
+      // First round: alphabetical order
+      _activePlayers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      _currentPlayerIndex = 0;
+    } else if (widget.roundNumber == GameManager().totalRounds) {
+      // Last round: based on Strongest Link's choice
+      final strongest = GameManager().strongestLink;
+      if (strongest != null) {
+        final strongestIndex = _activePlayers.indexOf(strongest);
+        if (widget.playFirst == 1) {
+          _currentPlayerIndex = strongestIndex;
+        } else {
+          _currentPlayerIndex = (strongestIndex + 1) % _activePlayers.length;
+        }
+      }
+    } else {
+      // Intermediate rounds: strongest link starts
+      final strongest = GameManager().strongestLink;
+      if (strongest != null) {
+        _currentPlayerIndex = _activePlayers.indexOf(strongest);
+        if (_currentPlayerIndex == -1) _currentPlayerIndex = 0; // Fallback
+      }
+    }
+
     // Filter for difficulty < 5 for normal rounds
     _roundQuestions = widget.questions
         .where((q) => q.difficulty < 5)
@@ -180,6 +207,9 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     final seconds = _remainingSeconds % 60;
     final timeStr = "$minutes:${seconds.toString().padLeft(2, '0')}";
 
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -263,12 +293,13 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                       border: Border.all(color: currentPlayer.color, width: 3),
                     ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text("CURRENT PLAYER", style: TextStyle(fontSize: 12, letterSpacing: 2)),
                         Text(
                           currentPlayer.name.toUpperCase(),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: (isLandscape ? Theme.of(context).textTheme.headlineSmall : Theme.of(context).textTheme.headlineMedium)?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: currentPlayer.color,
                           ),
@@ -282,7 +313,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                   Text(
                     currentQuestion.title,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    style: (isLandscape ? Theme.of(context).textTheme.titleLarge : Theme.of(context).textTheme.headlineSmall)?.copyWith(
                       fontWeight: FontWeight.w600,
                       height: 1.4,
                     ),
@@ -300,87 +331,97 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                   if (_isTimeOver)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 24.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: FilledButton(
-                          onPressed: () {
-                            // 1. Add this round's banked points to the game total
-                            GameManager().addBankedPoints(_roundBankedPoints);
-                            
-                            // 2. Determine links based on this round's performance
-                            GameManager().determineLinks();
-                            
-                            // 3. Push to Voting Phase
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => VotingPhase(
-                                  players: widget.players,
-                                  strongestLink: GameManager().strongestLink!,
-                                  weakestLink: GameManager().weakestLink!,
-                                ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: FilledButton(
+                              onPressed: () {
+                                // 1. Add this round's banked points to the game total
+                                GameManager().addBankedPoints(_roundBankedPoints);
+                                
+                                // 2. Determine links based on this round's performance
+                                GameManager().determineLinks();
+                                
+                                // 3. Push to Voting Phase
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => VotingPhase(
+                                      players: widget.players,
+                                      strongestLink: GameManager().strongestLink!,
+                                      weakestLink: GameManager().weakestLink!,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                            );
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: const Text(
-                            "NEXT",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              child: const Text(
+                                "NEXT",
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   
                   // Action Grid
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 2.5,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _isRoundActive ? _handleCorrect : null,
-                        icon: const Icon(Icons.check_circle),
-                        label: const Text("CORRECT"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: GridView.count(
+                        shrinkWrap: true,
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: isLandscape ? 4.5 : 2.5,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: _isRoundActive ? _handleCorrect : null,
+                            icon: const Icon(Icons.check_circle),
+                            label: const Text("CORRECT"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: _isRoundActive ? _handleWrong : null,
+                            icon: const Icon(Icons.cancel),
+                            label: const Text("WRONG"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          FilledButton.tonalIcon(
+                            onPressed: (_isRoundActive && _currentChainIndex > 0) ? _handleBank : null,
+                            icon: const Icon(Icons.account_balance),
+                            label: const Text("BANK"),
+                            style: FilledButton.styleFrom(
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: _isRoundActive ? _handleBurn : null,
+                            icon: const Icon(Icons.local_fire_department),
+                            label: const Text("BURN"),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.orange, width: 2),
+                              foregroundColor: Colors.orange.shade800,
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                       ),
-                      ElevatedButton.icon(
-                        onPressed: _isRoundActive ? _handleWrong : null,
-                        icon: const Icon(Icons.cancel),
-                        label: const Text("WRONG"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      FilledButton.tonalIcon(
-                        onPressed: (_isRoundActive && _currentChainIndex > 0) ? _handleBank : null,
-                        icon: const Icon(Icons.account_balance),
-                        label: const Text("BANK"),
-                        style: FilledButton.styleFrom(
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: _isRoundActive ? _handleBurn : null,
-                        icon: const Icon(Icons.local_fire_department),
-                        label: const Text("BURN"),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.orange, width: 2),
-                          foregroundColor: Colors.orange.shade800,
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
