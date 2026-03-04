@@ -5,6 +5,7 @@ import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/screens/voting_phase.dart';
 import 'package:weakest_link/services/game_manager.dart';
+import 'package:weakest_link/screens/round_start.dart';
 
 class PlayingRound extends StatefulWidget {
   final List<Player> players;
@@ -55,39 +56,18 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     
     // Determine who starts
     if (widget.roundNumber == 1) {
-      // First round: alphabetical order
       _activePlayers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       _currentPlayerIndex = 0;
-    } else if (widget.roundNumber == GameManager().totalRounds) {
-      // Last round: based on Strongest Link's choice
-      final strongest = GameManager().strongestLink;
-      if (strongest != null) {
-        final strongestIndex = _activePlayers.indexOf(strongest);
-        if (widget.playFirst == 1) {
-          _currentPlayerIndex = strongestIndex;
-        } else {
-          _currentPlayerIndex = (strongestIndex + 1) % _activePlayers.length;
-        }
-      }
     } else {
-      // Intermediate rounds: strongest link starts
       final strongest = GameManager().strongestLink;
       if (strongest != null) {
-        _currentPlayerIndex = _activePlayers.indexOf(strongest);
-        if (_currentPlayerIndex == -1) _currentPlayerIndex = 0; // Fallback
+        final index = _activePlayers.indexOf(strongest);
+        _currentPlayerIndex = index != -1 ? index : 0;
       }
     }
 
-    // Filter for difficulty < 5 for normal rounds
-    _roundQuestions = widget.questions
-        .where((q) => q.difficulty < 5)
-        .toList();
-    
-    // Fallback if no questions < 5 exist
-    if (_roundQuestions.isEmpty) {
-      _roundQuestions = List.from(widget.questions);
-    }
-    
+    _roundQuestions = widget.questions.where((q) => q.difficulty < 5).toList();
+    if (_roundQuestions.isEmpty) _roundQuestions = List.from(widget.questions);
     _roundQuestions.shuffle();
 
     _startLightsController = AnimationController(
@@ -104,7 +84,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
       }
     });
 
-    // Start the animation sequence
     _startLightsController.forward();
   }
 
@@ -234,7 +213,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
       ),
       body: Row(
         children: [
-          // Points Scale Sidebar (Weakest Link Style)
+          // Points Scale Sidebar
           Container(
             width: 100,
             decoration: BoxDecoration(
@@ -277,7 +256,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
             ),
           ),
           
-          // Main Game Play Area
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -339,22 +317,34 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                             height: 56,
                             child: FilledButton(
                               onPressed: () {
-                                // 1. Add this round's banked points to the game total
                                 GameManager().addBankedPoints(_roundBankedPoints);
-                                
-                                // 2. Determine links based on this round's performance
                                 GameManager().determineLinks();
                                 
-                                // 3. Push to Voting Phase
-                                Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                    builder: (context) => VotingPhase(
-                                      players: widget.players,
-                                      strongestLink: GameManager().strongestLink!,
-                                      weakestLink: GameManager().weakestLink!,
+                                if (_activePlayers.length == 2) {
+                                  // This was the decisive round.
+                                  // No one is voted out. Skip voting phase.
+                                  GameManager().resetRoundStats();
+                                  GameManager().incrementRoundNumber();
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (context) => RoundStart(
+                                        players: GameManager().players,
+                                        questions: GameManager().allQuestions,
+                                        roundNumber: GameManager().roundNumber,
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                } else {
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (context) => VotingPhase(
+                                        players: widget.players,
+                                        strongestLink: GameManager().strongestLink!,
+                                        weakestLink: GameManager().weakestLink!,
+                                      ),
+                                    ),
+                                  );
+                                }
                               },
                               style: FilledButton.styleFrom(
                                 backgroundColor: Theme.of(context).colorScheme.primary,
@@ -450,23 +440,15 @@ class StartingLightsPainter extends CustomPainter {
 
     for (int i = 0; i < 8; i++) {
       final angle = i * math.pi / 4;
-      
       Color color = Colors.grey.withOpacity(0.1);
-      
       if (progress > 0.66) {
         color = Colors.indigo;
       } else if (progress > 0.33) {
-        if (i == 0 || i == 4 || i == 5 || i == 7) {
-          color = Colors.lightBlueAccent;
-        }
+        if (i == 0 || i == 4 || i == 5 || i == 7) color = Colors.lightBlueAccent;
       } else if (progress > 0) {
-        if (i == 0 || i == 4) {
-          color = Colors.lightBlueAccent;
-        }
+        if (i == 0 || i == 4) color = Colors.lightBlueAccent;
       }
-
       paint.color = color;
-
       final start = Offset(
         center.dx + (radius - lineLength / 2) * math.cos(angle),
         center.dy + (radius - lineLength / 2) * math.sin(angle),

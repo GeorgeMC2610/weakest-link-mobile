@@ -81,32 +81,18 @@ class _VotingPhaseState extends State<VotingPhase> {
     // 2. Clear round specific stats for the next round
     GameManager().resetRoundStats();
 
-    // 3. Decide where to go next based on remaining players
-    if (GameManager().notEliminatedPlayers.length > 2) {
-      // Continue to next round
-      GameManager().incrementRoundNumber();
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => RoundStart(
-            players: GameManager().players,
-            questions: GameManager().allQuestions,
-            roundNumber: GameManager().roundNumber,
-          ),
+    // 3. Go to next round start
+    GameManager().incrementRoundNumber();
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => RoundStart(
+          players: GameManager().players,
+          questions: GameManager().allQuestions,
+          roundNumber: GameManager().roundNumber,
         ),
-        (route) => route.isFirst, // Keep the Home screen at the bottom
-      );
-    } else {
-      // Transition to the Final Head-to-Head
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => LastRound(
-            finalists: GameManager().notEliminatedPlayers,
-            grandPrize: GameManager().totalBankedPoints,
-            allQuestions: GameManager().allQuestions,
-          ),
-        ),
-      );
-    }
+      ),
+      (route) => route.isFirst, // Keep the Home screen at the bottom
+    );
   }
 
   void _showTieBreakerDialog(List<Player> tiedPlayers) {

@@ -47,7 +47,9 @@ class GameManager with ChangeNotifier {
     _players = selectedPlayers;
     _allQuestions = List.from(questions)..shuffle();
     _roundNumber = 1;
-    _totalRounds = _players.length - 1;
+    // Total rounds is equal to the number of players.
+    // For 3 players: Round 1 (3p), Round 2 (2p - Decisive), Round 3 (2p - Final)
+    _totalRounds = _players.length;
     _totalBankedPoints = 0;
     _currentState = GameState.playing;
 
@@ -131,8 +133,6 @@ class GameManager with ChangeNotifier {
       p.rightAnswers = 0;
       p.wrongAnswers = 0;
       p.pointsSaved = 0;
-      p.isStrongestLink = false;
-      p.isWeakestLink = false;
     }
     notifyListeners();
   }
