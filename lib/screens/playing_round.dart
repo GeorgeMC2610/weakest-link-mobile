@@ -42,6 +42,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   bool _isStarting = true;
   bool _isTimeOver = false;
   bool _showAnswer = false;
+  bool get showAnswer => GameManager().hostMode ? true : _showAnswer;
 
   // Animation logic for the starting lights
   late AnimationController _startLightsController;
@@ -298,7 +299,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                     ),
                   ),
                   const SizedBox(height: 12),
-                  !_showAnswer ? FilledButton.tonalIcon(
+                  !showAnswer ? FilledButton.tonalIcon(
                     onPressed: () {
                       setState(() {
                         _showAnswer = true;
