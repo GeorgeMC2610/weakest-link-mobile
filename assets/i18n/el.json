@@ -6,8 +6,12 @@
     "settings": "Ρυθμίσεις",
     "add_player": "Προσθήκη Παίκτη",
     "add_collection": "Προσθήκη Συλλογής",
+    "done_editing": "Τέλος επεξεργασίας",
     "default_questions": "Προεπιλεγμένες Ερωτήσεις",
     "start_game": "Έναρξη Παιχνιδιού"
+  },
+  "questions": {
+    "manage": "Διαχείριση"
   },
   "settings": {
     "host_mode": "Λειτουργία Παρουσιαστή",

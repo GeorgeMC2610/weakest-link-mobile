@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question_collection.dart';
@@ -22,9 +23,6 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> with TickerProviderStateMixin {
   final List<Player> _selectedPlayers = [];
   final List<QuestionCollection> _selectedQuestionCollections = [];
-
-  bool _isTimerEnabled = true;
-  bool _isSoundEnabled = true;
 
   bool _isEditingPlayers = false;
   late AnimationController _shakeController;
@@ -64,21 +62,21 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Weakest Link'),
+          title: Text(translate('app_title')),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           actions: [
             if (_isEditingPlayers)
               IconButton(
                 icon: const Icon(Icons.check),
                 onPressed: _toggleEditingPlayers,
-                tooltip: 'Done editing',
+                tooltip: translate('home.done_editing'),
               ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Players'),
-              Tab(text: 'Collections'),
-              Tab(text: 'Settings'),
+              Tab(text: translate('home.players')),
+              Tab(text: translate('home.questions')),
+              Tab(text: translate('home.settings')),
             ],
           ),
         ),
@@ -153,8 +151,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         floatingActionButton: _canStartGame && !_isEditingPlayers
             ? FloatingActionButton.extended(
                 icon: const Icon(Icons.play_arrow),
-                label: const Text('Start Game',
-                    style: TextStyle(
+                label: Text(translate('home.start_game'),
+                    style: const TextStyle(
                       fontSize: 17.0,
                       fontWeight: FontWeight.bold,
                     )),
