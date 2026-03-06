@@ -298,6 +298,15 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                     ),
                   ),
                   const SizedBox(height: 12),
+                  !_showAnswer ? FilledButton.tonalIcon(
+                    onPressed: () {
+                      setState(() {
+                        _showAnswer = true;
+                      });
+                    },
+                    label: const Text('Reveal Answer'),
+                    icon: const Icon(Icons.remove_red_eye_rounded)
+                  ) :
                   Text(
                     "(${_currentQuestion.answer})",
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
