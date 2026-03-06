@@ -17,6 +17,9 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
   final List<Question> _questions = [];
   final _formKey = GlobalKey<FormState>();
 
+  int _currentPage = 0;
+  static const int _questionsPerPage = 5;
+
   @override
   void initState() {
     super.initState();
@@ -36,12 +39,21 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
   void _addQuestion() {
     setState(() {
       _questions.add(Question(title: '', answer: '', difficulty: 1));
+      // Jump to the newly created question's page
+      _currentPage = (_questions.length - 1) ~/ _questionsPerPage;
     });
   }
 
   void _removeQuestion(int index) {
     setState(() {
       _questions.removeAt(index);
+      // Adjust page index if necessary
+      int maxPage = (_questions.length - 1) ~/ _questionsPerPage;
+      if (_currentPage > maxPage && maxPage >= 0) {
+        _currentPage = maxPage;
+      } else if (_questions.isEmpty) {
+        _currentPage = 0;
+      }
     });
   }
 
@@ -71,6 +83,14 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final totalPages = (_questions.length / _questionsPerPage).ceil();
+    final startIndex = _currentPage * _questionsPerPage;
+    final endIndex = (startIndex + _questionsPerPage < _questions.length)
+        ? startIndex + _questionsPerPage
+        : _questions.length;
+    
+    final visibleQuestions = _questions.sublist(startIndex, endIndex);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.collection == null ? 'New Collection' : 'Edit Collection'),
@@ -80,6 +100,7 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
             icon: const Icon(Icons.check),
           ),
         ],
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Form(
         key: _formKey,
@@ -97,7 +118,6 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter a title';
                   }
-                  // Check uniqueness if it's a new collection or title changed
                   if (widget.collection == null || value.trim() != widget.collection!.title) {
                     final exists = QuestionService.getAllCollections().any(
                       (c) => c.title.toLowerCase() == value.trim().toLowerCase(),
@@ -111,9 +131,12 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
             const Divider(),
             Expanded(
               child: ListView.builder(
-                itemCount: _questions.length,
+                padding: const EdgeInsets.only(bottom: 80),
+                itemCount: visibleQuestions.length,
                 itemBuilder: (context, index) {
+                  final actualIndex = startIndex + index;
                   return Card(
+                    key: ValueKey(_questions[actualIndex]),
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
@@ -123,31 +146,31 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Question ${index + 1}',
+                              Text('Question ${actualIndex + 1}',
                                   style: const TextStyle(fontWeight: FontWeight.bold)),
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _removeQuestion(index),
+                                onPressed: () => _removeQuestion(actualIndex),
                               ),
                             ],
                           ),
                           TextFormField(
-                            initialValue: _questions[index].title,
+                            initialValue: _questions[actualIndex].title,
                             decoration: const InputDecoration(labelText: 'Question'),
-                            onChanged: (val) => _questions[index] = Question(
+                            onChanged: (val) => _questions[actualIndex] = Question(
                               title: val,
-                              answer: _questions[index].answer,
-                              difficulty: _questions[index].difficulty,
+                              answer: _questions[actualIndex].answer,
+                              difficulty: _questions[actualIndex].difficulty,
                             ),
                             validator: (val) => val == null || val.isEmpty ? 'Required' : null,
                           ),
                           TextFormField(
-                            initialValue: _questions[index].answer,
+                            initialValue: _questions[actualIndex].answer,
                             decoration: const InputDecoration(labelText: 'Answer'),
-                            onChanged: (val) => _questions[index] = Question(
-                              title: _questions[index].title,
+                            onChanged: (val) => _questions[actualIndex] = Question(
+                              title: _questions[actualIndex].title,
                               answer: val,
-                              difficulty: _questions[index].difficulty,
+                              difficulty: _questions[actualIndex].difficulty,
                             ),
                             validator: (val) => val == null || val.isEmpty ? 'Required' : null,
                           ),
@@ -157,23 +180,23 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
                               const Text('Difficulty: '),
                               Expanded(
                                 child: Slider(
-                                  value: _questions[index].difficulty.toDouble(),
+                                  value: _questions[actualIndex].difficulty.toDouble(),
                                   min: 1,
                                   max: 5,
                                   divisions: 4,
-                                  label: _questions[index].difficulty.toString(),
+                                  label: _questions[actualIndex].difficulty.toString(),
                                   onChanged: (val) {
                                     setState(() {
-                                      _questions[index] = Question(
-                                        title: _questions[index].title,
-                                        answer: _questions[index].answer,
+                                      _questions[actualIndex] = Question(
+                                        title: _questions[actualIndex].title,
+                                        answer: _questions[actualIndex].answer,
                                         difficulty: val.toInt(),
                                       );
                                     });
                                   },
                                 ),
                               ),
-                              Text(_questions[index].difficulty.toString()),
+                              Text(_questions[actualIndex].difficulty.toString()),
                             ],
                           ),
                         ],
@@ -190,6 +213,34 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
         onPressed: _addQuestion,
         label: const Text('Add Question'),
         icon: const Icon(Icons.add),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: _currentPage > 0
+                    ? () => setState(() => _currentPage--)
+                    : null,
+                icon: const Icon(Icons.chevron_left),
+                label: const Text('Previous'),
+              ),
+              Text(
+                'Page ${_currentPage + 1} / ${totalPages == 0 ? 1 : totalPages}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextButton.icon(
+                onPressed: _currentPage < totalPages - 1
+                    ? () => setState(() => _currentPage++)
+                    : null,
+                icon: const Icon(Icons.chevron_right),
+                label: const Text('Next'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
