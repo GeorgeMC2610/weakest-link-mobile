@@ -23,6 +23,8 @@ class VotingPhase extends StatefulWidget {
 class _VotingPhaseState extends State<VotingPhase> {
   late Map<Player, int> _votes;
   late List<Player> _activePlayers;
+  bool _showLinks = false;
+  bool get showLinks => GameManager().hostMode ? true : _showLinks;
 
   @override
   void initState() {
@@ -144,6 +146,15 @@ class _VotingPhaseState extends State<VotingPhase> {
                     color: _totalVotes == _activePlayers.length ? Colors.green : Colors.grey,
                   ),
                 ),
+                FilledButton.tonalIcon(
+                  icon: Icon(showLinks ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () {
+                    setState(() {
+                      _showLinks = !_showLinks;
+                    });
+                  },
+                  label: Text("${_showLinks ? "Hide" : "Show"} Weakest/Strongest Links"),
+                )
               ],
             ),
           ),
@@ -168,12 +179,12 @@ class _VotingPhaseState extends State<VotingPhase> {
                     title: Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                     subtitle: Row(
                       children: [
-                        if (isStrongest) 
+                        if (isStrongest && showLinks)
                           const Padding(
                             padding: EdgeInsets.only(right: 8.0),
                             child: Text("STRONGEST LINK", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10)),
                           ),
-                        if (isWeakest) 
+                        if (isWeakest && showLinks)
                           const Text("WEAKEST LINK", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 10)),
                       ],
                     ),

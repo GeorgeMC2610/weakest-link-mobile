@@ -34,6 +34,9 @@ class _LastRoundState extends State<LastRound> {
 
   late Question _currentQuestion;
 
+  bool _showAnswer = false;
+  bool get showAnswer => GameManager().hostMode ? true : _showAnswer;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +47,7 @@ class _LastRoundState extends State<LastRound> {
     if (_winner != null) return;
 
     setState(() {
+      _showAnswer = false;
       if (_currentPlayerIndex == 0) {
         if (_isSuddenDeath && _p1Asked >= 5) {
           _player1Results.add(isCorrect);
@@ -146,7 +150,15 @@ class _LastRoundState extends State<LastRound> {
                     ),
               ),
               const SizedBox(height: 16),
-              Text(
+              !showAnswer ? FilledButton.tonalIcon(
+                  onPressed: () {
+                    setState(() {
+                      _showAnswer = true;
+                    });
+                  },
+                  label: const Text('Reveal Answer'),
+                  icon: const Icon(Icons.remove_red_eye_rounded)
+              ) : Text(
                 "(${_currentQuestion.answer})",
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.grey,

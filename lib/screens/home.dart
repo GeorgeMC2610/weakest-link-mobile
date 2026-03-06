@@ -147,12 +147,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 );
               },
             ),
-            SettingsTab(
-              isTimerEnabled: _isTimerEnabled,
-              isSoundEnabled: _isSoundEnabled,
-              onTimerChanged: (value) => setState(() => _isTimerEnabled = value),
-              onSoundChanged: (value) => setState(() => _isSoundEnabled = value),
-            ),
+            const SettingsTab(),
           ],
         ),
         floatingActionButton: _canStartGame && !_isEditingPlayers
