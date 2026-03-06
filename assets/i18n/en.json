@@ -11,7 +11,8 @@
   },
   "settings": {
     "host_mode": "Host Mode",
-    "host_mode_desc": "Turn this off, if you want right answers and weakest/strongest links to be revealed manually.",
+    "host_mode_desc1": "Manually reveal answers and weakest/strongest links.",
+    "host_mode_desc2": "Answers and weakest/strongest links are always revealed.",
     "language": "Language",
     "app_version": "App Version",
     "select_language": "Select Language"

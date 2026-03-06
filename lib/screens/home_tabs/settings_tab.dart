@@ -46,8 +46,14 @@ class SettingsTab extends StatelessWidget {
         return ListView(
           children: [
             SwitchListTile(
-              title: Text(translate('settings.host_mode')),
-              subtitle: Text(translate('settings.host_mode_desc')),
+              title: Text(
+                translate('settings.host_mode'),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              subtitle: Text(
+                translate(gameManager.hostMode ? 'settings.host_mode_desc2' : 'settings.host_mode_desc1'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
               value: gameManager.hostMode,
               onChanged: (_) => gameManager.toggleHostMode(),
             ),
