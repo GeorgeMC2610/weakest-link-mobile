@@ -1,0 +1,12 @@
+{
+    "app_title": "Weakest Link",
+    "home": {
+        "players": "Players",
+        "questions": "Questions",
+        "settings": "Settings",
+        "add_player": "Add Player",
+        "add_collection": "Add Collection",
+        "default_questions": "Default Questions",
+        "start_game": "Start Game"
+    }
+}
