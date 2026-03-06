@@ -80,6 +80,7 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
             icon: const Icon(Icons.check),
           ),
         ],
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Form(
         key: _formKey,
