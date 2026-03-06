@@ -13,7 +13,7 @@ class SettingsTab extends StatelessWidget {
           children: [
             SwitchListTile(
               title: const Text('Host Mode'),
-              subtitle: const Text('The host reads the questions and validates answers manually'),
+              subtitle: const Text('Turn this off, if you want right answers and weakest/strongest links to be revealed manually.'),
               value: gameManager.hostMode,
               onChanged: (_) => gameManager.toggleHostMode(),
             ),
@@ -21,6 +21,7 @@ class SettingsTab extends StatelessWidget {
             const ListTile(
               title: Text('App Version'),
               trailing: Text('1.0.0'),
+
             ),
           ],
         );
