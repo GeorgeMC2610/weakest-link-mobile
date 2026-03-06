@@ -285,7 +285,6 @@ class SparklePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final random = math.Random(42);
     final paint = Paint()..style = PaintingStyle.fill;
 
     for (var i = 0; i < points.length; i++) {
