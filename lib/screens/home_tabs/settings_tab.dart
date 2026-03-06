@@ -1,27 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/services/game_manager.dart';
 
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key});
 
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(translate('settings.select_language')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('English'),
+                onTap: () {
+                  changeLocale(context, 'en');
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: const Text('Ελληνικά'),
+                onTap: () {
+                  changeLocale(context, 'el');
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<GameManager>(
       builder: (context, gameManager, child) {
+        final currentLocale = LocalizedApp.of(context).delegate.currentLocale.languageCode;
+        final languageName = currentLocale == 'en' ? 'English' : 'Ελληνικά';
+
         return ListView(
           children: [
             SwitchListTile(
-              title: const Text('Host Mode'),
-              subtitle: const Text('Turn this off, if you want right answers and weakest/strongest links to be revealed manually.'),
+              title: Text(translate('settings.host_mode')),
+              subtitle: Text(translate('settings.host_mode_desc')),
               value: gameManager.hostMode,
               onChanged: (_) => gameManager.toggleHostMode(),
             ),
             const Divider(),
-            const ListTile(
-              title: Text('App Version'),
-              trailing: Text('1.0.0'),
-
+            ListTile(
+              title: Text(translate('settings.language')),
+              subtitle: Text(languageName),
+              leading: const Icon(Icons.language),
+              onTap: () => _showLanguageDialog(context),
+            ),
+            const Divider(),
+            ListTile(
+              title: Text(translate('settings.app_version')),
+              trailing: const Text('1.0.0'),
             ),
           ],
         );
