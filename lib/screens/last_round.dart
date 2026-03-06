@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
+import 'package:weakest_link/services/game_manager.dart';
 
 class LastRound extends StatefulWidget {
   final List<Player> finalists;
@@ -31,23 +32,12 @@ class _LastRoundState extends State<LastRound> {
   bool _isSuddenDeath = false;
   Player? _winner;
 
-  late List<Question> _finalQuestions;
-  int _currentQuestionIndex = 0;
+  late Question _currentQuestion;
 
   @override
   void initState() {
     super.initState();
-    // Filter questions by difficulty 5 and shuffle
-    _finalQuestions = widget.allQuestions
-        .where((q) => q.difficulty == 5)
-        .toList();
-    
-    // Fallback if no difficulty 5 questions exist
-    if (_finalQuestions.isEmpty) {
-      _finalQuestions = List.from(widget.allQuestions);
-    }
-    
-    _finalQuestions.shuffle();
+    _currentQuestion = GameManager().getNextFinalQuestion();
   }
 
   void _handleAnswer(bool isCorrect) {
@@ -74,7 +64,7 @@ class _LastRoundState extends State<LastRound> {
         _currentPlayerIndex = 0;
       }
 
-      _currentQuestionIndex = (_currentQuestionIndex + 1) % _finalQuestions.length;
+      _currentQuestion = GameManager().getNextFinalQuestion();
       _checkGameState();
     });
   }
@@ -115,7 +105,6 @@ class _LastRoundState extends State<LastRound> {
   @override
   Widget build(BuildContext context) {
     final currentPlayer = widget.finalists[_currentPlayerIndex];
-    final currentQuestion = _finalQuestions[_currentQuestionIndex % _finalQuestions.length];
 
     return Scaffold(
       appBar: AppBar(
@@ -150,7 +139,7 @@ class _LastRoundState extends State<LastRound> {
               const SizedBox(height: 32),
               
               Text(
-                currentQuestion.title,
+                _currentQuestion.title,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -158,7 +147,7 @@ class _LastRoundState extends State<LastRound> {
               ),
               const SizedBox(height: 16),
               Text(
-                "(${currentQuestion.answer})",
+                "(${_currentQuestion.answer})",
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.grey,
                       fontStyle: FontStyle.italic,

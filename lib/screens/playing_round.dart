@@ -45,8 +45,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   late AnimationController _startLightsController;
 
   // Question logic
-  int _currentQuestionIndex = 0;
-  late List<Question> _roundQuestions;
+  late Question _currentQuestion;
 
   @override
   void initState() {
@@ -66,9 +65,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
       }
     }
 
-    _roundQuestions = widget.questions.where((q) => q.difficulty < 5).toList();
-    if (_roundQuestions.isEmpty) _roundQuestions = List.from(widget.questions);
-    _roundQuestions.shuffle();
+    _currentQuestion = GameManager().getNextStandardQuestion();
 
     _startLightsController = AnimationController(
       vsync: this,
@@ -114,7 +111,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void _nextPlayer() {
     setState(() {
       _currentPlayerIndex = (_currentPlayerIndex + 1) % _activePlayers.length;
-      _currentQuestionIndex = (_currentQuestionIndex + 1) % _roundQuestions.length;
+      _currentQuestion = GameManager().getNextStandardQuestion();
     });
   }
 
@@ -154,7 +151,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void _handleBurn() {
     if (!_isRoundActive) return;
     setState(() {
-      _currentQuestionIndex = (_currentQuestionIndex + 1) % _roundQuestions.length;
+      _currentQuestion = GameManager().getNextStandardQuestion();
     });
   }
 
@@ -181,7 +178,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     }
 
     final currentPlayer = _activePlayers[_currentPlayerIndex];
-    final currentQuestion = _roundQuestions[_currentQuestionIndex % _roundQuestions.length];
     final minutes = _remainingSeconds ~/ 60;
     final seconds = _remainingSeconds % 60;
     final timeStr = "$minutes:${seconds.toString().padLeft(2, '0')}";
@@ -289,7 +285,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                   
                   // Question & Answer
                   Text(
-                    currentQuestion.title,
+                    _currentQuestion.title,
                     textAlign: TextAlign.center,
                     style: (isLandscape ? Theme.of(context).textTheme.titleLarge : Theme.of(context).textTheme.headlineSmall)?.copyWith(
                       fontWeight: FontWeight.w600,
@@ -298,7 +294,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "(${currentQuestion.answer})",
+                    "(${_currentQuestion.answer})",
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.grey,
                       fontStyle: FontStyle.italic,
