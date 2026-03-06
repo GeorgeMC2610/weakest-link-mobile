@@ -69,7 +69,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     // Standard rounds time limit logic
-    final totalSeconds = 30 - (10 * (widget.roundNumber - 1));
+    final totalSeconds = 70 + (10 * (GameManager().notEliminatedPlayers.length));
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     final formattedTime = '$minutes:${seconds.toString().padLeft(2, '0')}';
