@@ -1,42 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:weakest_link/services/game_manager.dart';
 
 class SettingsTab extends StatelessWidget {
-  final bool isTimerEnabled;
-  final bool isSoundEnabled;
-  final ValueChanged<bool> onTimerChanged;
-  final ValueChanged<bool> onSoundChanged;
-
-  const SettingsTab({
-    super.key,
-    required this.isTimerEnabled,
-    required this.isSoundEnabled,
-    required this.onTimerChanged,
-    required this.onSoundChanged,
-  });
+  const SettingsTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        SwitchListTile(
-          title: const Text('Timer Enabled'),
-          value: isTimerEnabled,
-          onChanged: onTimerChanged,
-        ),
-        SwitchListTile(
-          title: const Text('Sound Effects'),
-          value: isSoundEnabled,
-          onChanged: onSoundChanged,
-        ),
-        const ListTile(
-          title: Text('Difficulty'),
-          trailing: Text('Medium'),
-        ),
-        const ListTile(
-          title: Text('Language'),
-          trailing: Text('English'),
-        ),
-      ],
+    return Consumer<GameManager>(
+      builder: (context, gameManager, child) {
+        return ListView(
+          children: [
+            SwitchListTile(
+              title: const Text('Host Mode'),
+              subtitle: const Text('The host reads the questions and validates answers manually'),
+              value: gameManager.hostMode,
+              onChanged: (_) => gameManager.toggleHostMode(),
+            ),
+            const Divider(),
+            const ListTile(
+              title: Text('App Version'),
+              trailing: Text('1.0.0'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

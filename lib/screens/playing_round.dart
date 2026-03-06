@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/screens/voting_phase.dart';
@@ -12,7 +13,7 @@ class PlayingRound extends StatefulWidget {
   final List<Question> questions;
   final int roundNumber;
   final int totalSeconds;
-  final int? playFirst; // 1: first, 2: second (for last round)
+  final int? playFirst;
 
   const PlayingRound({
     super.key,
@@ -40,6 +41,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   bool _isRoundActive = false;
   bool _isStarting = true;
   bool _isTimeOver = false;
+  bool _showAnswer = false;
 
   // Animation logic for the starting lights
   late AnimationController _startLightsController;
@@ -110,6 +112,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
   void _nextPlayer() {
     setState(() {
+      _showAnswer = false;
       _currentPlayerIndex = (_currentPlayerIndex + 1) % _activePlayers.length;
       _currentQuestion = GameManager().getNextStandardQuestion();
     });
@@ -157,6 +160,8 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final gameManager = Provider.of<GameManager>(context);
+
     if (_isStarting) {
       return Scaffold(
         backgroundColor: Colors.black,

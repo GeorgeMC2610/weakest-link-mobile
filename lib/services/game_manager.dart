@@ -49,6 +49,14 @@ class GameManager with ChangeNotifier {
   int _totalRounds = 0;
   int get totalRounds => _totalRounds;
 
+  bool _hostMode = false;
+  bool get hostMode => _hostMode;
+
+  void toggleHostMode() {
+    _hostMode = !_hostMode;
+    notifyListeners();
+  }
+
   void startGame(List<Player> selectedPlayers, List<Question> questions) {
     _players = selectedPlayers;
     _allQuestions = List.from(questions)..shuffle();
@@ -62,8 +70,6 @@ class GameManager with ChangeNotifier {
     _finalQuestionIndex = 0;
 
     _roundNumber = 1;
-    // Total rounds is equal to the number of players.
-    // For 3 players: Round 1 (3p), Round 2 (2p - Decisive), Round 3 (2p - Final)
     _totalRounds = _players.length;
     _totalBankedPoints = 0;
     _currentState = GameState.playing;
