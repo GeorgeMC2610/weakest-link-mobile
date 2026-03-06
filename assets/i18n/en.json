@@ -1,12 +1,19 @@
 {
-    "app_title": "Weakest Link",
-    "home": {
-        "players": "Players",
-        "questions": "Questions",
-        "settings": "Settings",
-        "add_player": "Add Player",
-        "add_collection": "Add Collection",
-        "default_questions": "Default Questions",
-        "start_game": "Start Game"
-    }
+  "app_title": "Weakest Link",
+  "home": {
+      "players": "Players",
+      "questions": "Questions",
+      "settings": "Settings",
+      "add_player": "Add Player",
+      "add_collection": "Add Collection",
+      "default_questions": "Default Questions",
+      "start_game": "Start Game"
+  },
+  "settings": {
+    "host_mode": "Host Mode",
+    "host_mode_desc": "Turn this off, if you want right answers and weakest/strongest links to be revealed manually.",
+    "language": "Language",
+    "app_version": "App Version",
+    "select_language": "Select Language"
+  }
 }
