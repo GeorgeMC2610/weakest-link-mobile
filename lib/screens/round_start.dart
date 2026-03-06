@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
+import 'package:weakest_link/services/game_manager.dart';
 import 'dart:math' as math;
 
 import 'package:weakest_link/screens/playing_round.dart';
+import 'package:weakest_link/screens/last_round.dart';
 
 class RoundStart extends StatefulWidget {
   final List<Player> players;
@@ -25,10 +27,12 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   late List<Offset> _sparklePoints;
+  int? _playFirst; // null: not decided, 1: play (start), 2: pass (other starts)
 
   @override
   void initState() {
     super.initState();
+
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -37,6 +41,13 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    if (widget.roundNumber == 1) {
+      GameManager().startGame(
+        widget.players,
+        widget.questions
+      );
+    }
 
     final random = math.Random();
     _sparklePoints = List.generate(30, (index) {
@@ -53,16 +64,23 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  bool get _isLastRound => widget.roundNumber == GameManager().totalRounds;
+
   @override
   Widget build(BuildContext context) {
-    final totalSeconds = 150 - (10 * (widget.roundNumber - 1));
+    // Standard rounds time limit logic
+    final totalSeconds = 70 + (10 * (GameManager().notEliminatedPlayers.length));
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     final formattedTime = '$minutes:${seconds.toString().padLeft(2, '0')}';
 
+    final strongestLink = GameManager().strongestLink;
+    final remainingPlayers = widget.players.where((p) => !p.isEliminated).toList();
+    final isDecisiveRound = remainingPlayers.length == 2;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Round ${widget.roundNumber}'),
+        title: Text(_isLastRound ? 'Final' : 'Round ${widget.roundNumber}'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
@@ -70,7 +88,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
         child: Column(
           children: [
             Text(
-              'Round ${widget.roundNumber}',
+              _isLastRound ? 'FINAL ROUND' : (isDecisiveRound ? 'DECISIVE ROUND' : 'Round ${widget.roundNumber}'),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
@@ -78,7 +96,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
             ),
             const SizedBox(height: 24),
             Text(
-              'Remaining Players:',
+              _isLastRound ? 'The Finalists:' : 'Remaining Players:',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
@@ -96,6 +114,9 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                             : player.color,
                         radius: 12,
                       ),
+                      trailing: player.isStrongestLink 
+                        ? const Icon(Icons.star, color: Colors.amber)
+                        : null,
                       title: Text(
                         player.name,
                         style: TextStyle(
@@ -112,45 +133,70 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                 },
               ),
             ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(24),
+            if (_isLastRound && strongestLink != null) ...[
+               Text(
+                '${strongestLink.name}, as Strongest Link,\ndo you want to play or pass?',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.timer_outlined,
-                        color: Theme.of(context).colorScheme.onTertiaryContainer,
-                        size: 32,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        formattedTime,
-                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onTertiaryContainer,
-                            ),
-                      ),
-                    ],
+                  ChoiceChip(
+                    label: const Text('Play'),
+                    selected: _playFirst == 1,
+                    onSelected: (selected) => setState(() => _playFirst = 1),
                   ),
-                  Text(
-                    'TIME LIMIT',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onTertiaryContainer,
-                          letterSpacing: 4.0,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  ChoiceChip(
+                    label: const Text('Pass'),
+                    selected: _playFirst == 2,
+                    onSelected: (selected) => setState(() => _playFirst = 2),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
+            ],
+            const SizedBox(height: 24),
+            if (!_isLastRound)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.timer_outlined,
+                          color: Theme.of(context).colorScheme.onTertiaryContainer,
+                          size: 32,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          formattedTime,
+                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onTertiaryContainer,
+                              ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'TIME LIMIT',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onTertiaryContainer,
+                            letterSpacing: 4.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 24),
             Stack(
               alignment: Alignment.center,
@@ -174,21 +220,41 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                     width: double.infinity,
                     height: 60,
                     child: FilledButton.tonal(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PlayingRound(
-                              questions: [],
-                              players: widget.players,
-                              roundNumber: widget.roundNumber,
-                              totalSeconds: totalSeconds,
+                      onPressed: (_isLastRound && _playFirst == null) ? null : () {
+                        if (_isLastRound) {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => LastRound(
+                                finalists: remainingPlayers..sort((a, b) {
+                                  if (a.isStrongestLink == b.isStrongestLink) return 0;
+
+                                  if (_playFirst == 1) {
+                                    return a.isStrongestLink ? -1 : 1;
+                                  } else {
+                                    return a.isStrongestLink ? 1 : -1;
+                                  }
+                                }),
+                                grandPrize: GameManager().totalBankedPoints,
+                                allQuestions: widget.questions,
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        } else {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => PlayingRound(
+                                questions: GameManager().allQuestions,
+                                players: GameManager().players,
+                                roundNumber: widget.roundNumber,
+                                totalSeconds: totalSeconds,
+                              ),
+                            ),
+                          );
+                        }
                       },
-                      child: const Text(
-                        'CLOCK!',
-                        style: TextStyle(
+                      child: Text(
+                        _isLastRound ? 'START FINAL' : 'CLOCK!',
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 2.0,
@@ -219,7 +285,6 @@ class SparklePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final random = math.Random(42);
     final paint = Paint()..style = PaintingStyle.fill;
 
     for (var i = 0; i < points.length; i++) {

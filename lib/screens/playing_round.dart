@@ -5,12 +5,14 @@ import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/screens/voting_phase.dart';
 import 'package:weakest_link/services/game_manager.dart';
+import 'package:weakest_link/screens/round_start.dart';
 
 class PlayingRound extends StatefulWidget {
   final List<Player> players;
   final List<Question> questions;
   final int roundNumber;
   final int totalSeconds;
+  final int? playFirst; // 1: first, 2: second (for last round)
 
   const PlayingRound({
     super.key,
@@ -18,6 +20,7 @@ class PlayingRound extends StatefulWidget {
     required this.questions,
     required this.roundNumber,
     required this.totalSeconds,
+    this.playFirst,
   });
 
   @override
@@ -27,7 +30,7 @@ class PlayingRound extends StatefulWidget {
 class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMixin {
   final List<int> _pointsScale = [0, 20, 50, 100, 200, 300, 450, 600, 800, 1000];
   int _currentChainIndex = 0;
-  int _totalBankedPoints = 0;
+  int _roundBankedPoints = 0;
   int _currentPlayerIndex = 0;
   late List<Player> _activePlayers;
 
@@ -42,8 +45,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   late AnimationController _startLightsController;
 
   // Question logic
-  int _currentQuestionIndex = 0;
-  late List<Question> _shuffledQuestions;
+  late Question _currentQuestion;
 
   @override
   void initState() {
@@ -51,11 +53,23 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     _activePlayers = widget.players.where((p) => !p.isEliminated).toList();
     _remainingSeconds = widget.totalSeconds;
     
-    _shuffledQuestions = List.from(widget.questions)..shuffle();
+    // Determine who starts
+    if (widget.roundNumber == 1) {
+      _activePlayers.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      _currentPlayerIndex = 0;
+    } else {
+      final strongest = GameManager().strongestLink;
+      if (strongest != null) {
+        final index = _activePlayers.indexOf(strongest);
+        _currentPlayerIndex = index != -1 ? index : 0;
+      }
+    }
+
+    _currentQuestion = GameManager().getNextStandardQuestion();
 
     _startLightsController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1250),
     );
 
     _startLightsController.addStatusListener((status) {
@@ -67,7 +81,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
       }
     });
 
-    // Start the animation sequence
     _startLightsController.forward();
   }
 
@@ -98,7 +111,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void _nextPlayer() {
     setState(() {
       _currentPlayerIndex = (_currentPlayerIndex + 1) % _activePlayers.length;
-      _currentQuestionIndex = (_currentQuestionIndex + 1) % _shuffledQuestions.length;
+      _currentQuestion = GameManager().getNextStandardQuestion();
     });
   }
 
@@ -129,7 +142,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     final currentPlayer = _activePlayers[_currentPlayerIndex];
     setState(() {
       final bankedAmount = _pointsScale[_currentChainIndex];
-      _totalBankedPoints += bankedAmount;
+      _roundBankedPoints += bankedAmount;
       currentPlayer.pointsSaved += bankedAmount;
       _currentChainIndex = 0;
     });
@@ -138,7 +151,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void _handleBurn() {
     if (!_isRoundActive) return;
     setState(() {
-      _currentQuestionIndex = (_currentQuestionIndex + 1) % _shuffledQuestions.length;
+      _currentQuestion = GameManager().getNextStandardQuestion();
     });
   }
 
@@ -165,17 +178,19 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     }
 
     final currentPlayer = _activePlayers[_currentPlayerIndex];
-    final currentQuestion = _shuffledQuestions[_currentQuestionIndex % _shuffledQuestions.length];
     final minutes = _remainingSeconds ~/ 60;
     final seconds = _remainingSeconds % 60;
     final timeStr = "$minutes:${seconds.toString().padLeft(2, '0')}";
+
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
 
     return Scaffold(
       appBar: AppBar(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Banked: $_totalBankedPoints'),
+            Text('Banked: $_roundBankedPoints'),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
@@ -194,7 +209,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
       ),
       body: Row(
         children: [
-          // Points Scale Sidebar (Weakest Link Style)
+          // Points Scale Sidebar
           Container(
             width: 100,
             decoration: BoxDecoration(
@@ -204,7 +219,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(_pointsScale.length, (index) {
-                // Display highest value at top
                 int reverseIndex = _pointsScale.length - 1 - index;
                 if (reverseIndex == 0) return const SizedBox.shrink();
                 
@@ -238,7 +252,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
             ),
           ),
           
-          // Main Game Play Area
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -254,12 +267,13 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                       border: Border.all(color: currentPlayer.color, width: 3),
                     ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text("CURRENT PLAYER", style: TextStyle(fontSize: 12, letterSpacing: 2)),
                         Text(
                           currentPlayer.name.toUpperCase(),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: (isLandscape ? Theme.of(context).textTheme.headlineSmall : Theme.of(context).textTheme.headlineMedium)?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: currentPlayer.color,
                           ),
@@ -271,16 +285,16 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                   
                   // Question & Answer
                   Text(
-                    currentQuestion.title,
+                    _currentQuestion.title,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    style: (isLandscape ? Theme.of(context).textTheme.titleLarge : Theme.of(context).textTheme.headlineSmall)?.copyWith(
                       fontWeight: FontWeight.w600,
                       height: 1.4,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "(${currentQuestion.answer})",
+                    "(${_currentQuestion.answer})",
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.grey,
                       fontStyle: FontStyle.italic,
@@ -291,81 +305,109 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                   if (_isTimeOver)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 24.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: FilledButton(
-                          onPressed: () {
-                            GameManager().determineLinks();
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => VotingPhase(
-                                  players: widget.players,
-                                  strongestLink: GameManager().strongestLink,
-                                  weakestLink: GameManager().weakestLink,
-                                ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: FilledButton(
+                              onPressed: () {
+                                GameManager().addBankedPoints(_roundBankedPoints);
+                                GameManager().determineLinks();
+                                
+                                if (_activePlayers.length == 2) {
+                                  // This was the decisive round.
+                                  // No one is voted out. Skip voting phase.
+                                  GameManager().resetRoundStats();
+                                  GameManager().incrementRoundNumber();
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (context) => RoundStart(
+                                        players: GameManager().players,
+                                        questions: GameManager().allQuestions,
+                                        roundNumber: GameManager().roundNumber,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (context) => VotingPhase(
+                                        players: widget.players,
+                                        strongestLink: GameManager().strongestLink!,
+                                        weakestLink: GameManager().weakestLink!,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                            );
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: const Text(
-                            "NEXT",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              child: const Text(
+                                "NEXT",
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   
                   // Action Grid
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 2.5,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _isRoundActive ? _handleCorrect : null,
-                        icon: const Icon(Icons.check_circle),
-                        label: const Text("CORRECT"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: GridView.count(
+                        shrinkWrap: true,
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: isLandscape ? 4.5 : 2.5,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: _isRoundActive ? _handleCorrect : null,
+                            icon: const Icon(Icons.check_circle),
+                            label: const Text("CORRECT"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: _isRoundActive ? _handleWrong : null,
+                            icon: const Icon(Icons.cancel),
+                            label: const Text("WRONG"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          FilledButton.tonalIcon(
+                            onPressed: (_isRoundActive && _currentChainIndex > 0) ? _handleBank : null,
+                            icon: const Icon(Icons.account_balance),
+                            label: const Text("BANK"),
+                            style: FilledButton.styleFrom(
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: _isRoundActive ? _handleBurn : null,
+                            icon: const Icon(Icons.local_fire_department),
+                            label: const Text("BURN"),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.orange, width: 2),
+                              foregroundColor: Colors.orange.shade800,
+                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                       ),
-                      ElevatedButton.icon(
-                        onPressed: _isRoundActive ? _handleWrong : null,
-                        icon: const Icon(Icons.cancel),
-                        label: const Text("WRONG"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      FilledButton.tonalIcon(
-                        onPressed: (_isRoundActive && _currentChainIndex > 0) ? _handleBank : null,
-                        icon: const Icon(Icons.account_balance),
-                        label: const Text("BANK"),
-                        style: FilledButton.styleFrom(
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: _isRoundActive ? _handleBurn : null,
-                        icon: const Icon(Icons.local_fire_department),
-                        label: const Text("BURN"),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.orange, width: 2),
-                          foregroundColor: Colors.orange.shade800,
-                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -392,40 +434,24 @@ class StartingLightsPainter extends CustomPainter {
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round;
 
-    // Index mapping for the 8 bars forming a circle:
-    // 0: Right (--)
-    // 1: Bottom-Right (\)
-    // 2: Bottom (|)
-    // 3: Bottom-Left (/)
-    // 4: Left (--)
-    // 5: Top-Left (\)
-    // 6: Top (|)
-    // 7: Top-Right (/)
-
-    for (int i = 0; i < 8; i++) {
-      final angle = i * math.pi / 4;
-      
+    for (int i = 0; i < 12; i++) {
+      final angle = i * math.pi / 6;
       Color color = Colors.grey.withOpacity(0.1);
-      
-      // Animation phases (total 900ms):
-      // 0.0 - 0.33 (300ms): Left (4) and Right (0) light blue
-      // 0.33 - 0.66 (300ms): + Top-Left (5) and Top-Right (7) light blue
-      // 0.66 - 1.0 (300ms): All indigo
-      
-      if (progress > 0.66) {
+
+      int total = 12;
+      int half = total ~/ 2;
+
+      int steps = (progress / 0.1).floor();
+      steps = steps.clamp(0, half);
+
+      if ((i < steps) || (i >= 6 && i < 6 + steps)) {
+        color = Colors.lightBlueAccent;
+      }
+      if (progress > 0.75) {
         color = Colors.indigo;
-      } else if (progress > 0.33) {
-        if (i == 0 || i == 4 || i == 5 || i == 7) {
-          color = Colors.lightBlueAccent;
-        }
-      } else if (progress > 0) {
-        if (i == 0 || i == 4) {
-          color = Colors.lightBlueAccent;
-        }
       }
 
       paint.color = color;
-
       final start = Offset(
         center.dx + (radius - lineLength / 2) * math.cos(angle),
         center.dy + (radius - lineLength / 2) * math.sin(angle),
@@ -437,7 +463,6 @@ class StartingLightsPainter extends CustomPainter {
       canvas.drawLine(start, end, paint);
     }
     
-    // Draw Round Text in the middle
     final textPainter = TextPainter(
       text: TextSpan(
         text: "ROUND $roundNumber",

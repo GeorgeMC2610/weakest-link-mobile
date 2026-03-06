@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:weakest_link/classes/player.dart';
+import 'package:weakest_link/classes/question.dart';
 
 class GameManager with ChangeNotifier {
   GameManager._internal();
@@ -13,17 +14,82 @@ class GameManager with ChangeNotifier {
   List<Player> get players => _players;
   List<Player> get notEliminatedPlayers => _players.where((p) => !p.isEliminated).toList();
   List<Player> get eliminatedPlayers => _players.where((p) => p.isEliminated).toList();
-  Player get strongestLink => _players.firstWhere((p) => p.isStrongestLink);
-  Player get weakestLink => _players.firstWhere((p) => p.isWeakestLink);
+  
+  Player? get strongestLink {
+    try {
+      return _players.firstWhere((p) => p.isStrongestLink);
+    } catch (e) {
+      return null;
+    }
+  }
 
-  void setPlayers(List<Player> players) {
-    _players = players;
+  Player? get weakestLink {
+    try {
+      return _players.firstWhere((p) => p.isWeakestLink);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  List<Question> _allQuestions = [];
+  List<Question> get allQuestions => _allQuestions;
+
+  List<Question> _standardQuestions = [];
+  int _standardQuestionIndex = 0;
+
+  List<Question> _finalQuestions = [];
+  int _finalQuestionIndex = 0;
+
+  int _totalBankedPoints = 0;
+  int get totalBankedPoints => _totalBankedPoints;
+
+  int _roundNumber = 1;
+  int get roundNumber => _roundNumber;
+
+  int _totalRounds = 0;
+  int get totalRounds => _totalRounds;
+
+  void startGame(List<Player> selectedPlayers, List<Question> questions) {
+    _players = selectedPlayers;
+    _allQuestions = List.from(questions)..shuffle();
+    
+    _standardQuestions = _allQuestions.where((q) => q.difficulty < 5).toList();
+    if (_standardQuestions.isEmpty) _standardQuestions = List.from(_allQuestions);
+    _standardQuestionIndex = 0;
+
+    _finalQuestions = _allQuestions.where((q) => q.difficulty == 5).toList();
+    if (_finalQuestions.isEmpty) _finalQuestions = List.from(_allQuestions);
+    _finalQuestionIndex = 0;
+
+    _roundNumber = 1;
+    // Total rounds is equal to the number of players.
+    // For 3 players: Round 1 (3p), Round 2 (2p - Decisive), Round 3 (2p - Final)
+    _totalRounds = _players.length;
+    _totalBankedPoints = 0;
+    _currentState = GameState.playing;
+
+    for (var p in _players) {
+      p.isEliminated = false;
+      p.isStrongestLink = false;
+      p.isWeakestLink = false;
+      p.rightAnswers = 0;
+      p.wrongAnswers = 0;
+      p.pointsSaved = 0;
+      p.votes = 0;
+    }
     notifyListeners();
   }
 
-  void changeState(GameState newState) {
-    _currentState = newState;
-    notifyListeners();
+  Question getNextStandardQuestion() {
+    final question = _standardQuestions[_standardQuestionIndex % _standardQuestions.length];
+    _standardQuestionIndex++;
+    return question;
+  }
+
+  Question getNextFinalQuestion() {
+    final question = _finalQuestions[_finalQuestionIndex % _finalQuestions.length];
+    _finalQuestionIndex++;
+    return question;
   }
 
   void eliminatePlayer(Player player) {
@@ -31,8 +97,10 @@ class GameManager with ChangeNotifier {
     notifyListeners();
   }
 
-  int _roundNumber = 1;
-  int get roundNumber => _roundNumber;
+  void addBankedPoints(int amount) {
+    _totalBankedPoints += amount;
+    notifyListeners();
+  }
 
   void incrementRoundNumber() {
     _roundNumber++;
@@ -43,16 +111,12 @@ class GameManager with ChangeNotifier {
     final activePlayers = notEliminatedPlayers;
     if (activePlayers.isEmpty) return;
 
-    // Reset previous links
     for (var p in _players) {
       p.isStrongestLink = false;
       p.isWeakestLink = false;
     }
 
     // Determine Strongest Link
-    // 1. Most right answers
-    // 2. Most points saved (banked)
-    // 3. Fewest wrong answers
     Player strongest = activePlayers[0];
     for (var i = 1; i < activePlayers.length; i++) {
       final p = activePlayers[i];
@@ -71,9 +135,6 @@ class GameManager with ChangeNotifier {
     strongest.isStrongestLink = true;
 
     // Determine Weakest Link
-    // 1. Most wrong answers
-    // 2. Least points saved (banked)
-    // 3. Fewest right answers
     Player weakest = activePlayers[0];
     for (var i = 1; i < activePlayers.length; i++) {
       final p = activePlayers[i];
@@ -99,8 +160,6 @@ class GameManager with ChangeNotifier {
       p.rightAnswers = 0;
       p.wrongAnswers = 0;
       p.pointsSaved = 0;
-      p.isStrongestLink = false;
-      p.isWeakestLink = false;
     }
     notifyListeners();
   }
