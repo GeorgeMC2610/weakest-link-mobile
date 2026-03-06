@@ -4,6 +4,7 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:weakest_link/screens/home.dart';
 import 'package:weakest_link/services/game_manager.dart';
+import 'package:weakest_link/services/language_provider.dart';
 import 'package:weakest_link/services/player_service.dart';
 import 'package:weakest_link/services/question_service.dart';
 import 'package:flutter_translate/flutter_translate.dart';
@@ -19,7 +20,7 @@ void main() async {
   // 1. Initialize Hive for Flutter
   await Hive.initFlutter();
 
-  // 2. Register Type Adapters (Must match the IDs in your models)
+  // 2. Register Type Adapters (Must match the IDs in models)
   Hive.registerAdapter(PlayerAdapter());
   Hive.registerAdapter(QuestionAdapter());
   Hive.registerAdapter(QuestionCollectionAdapter());
@@ -30,6 +31,7 @@ void main() async {
 
   // 4. Initialize Localization
   var delegate = await LocalizationDelegate.create(
+    preferences: LanguageProvider(),
     fallbackLocale: 'en',
     supportedLocales: ['en', 'el'],
   );
