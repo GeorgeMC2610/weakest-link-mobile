@@ -35,5 +35,19 @@
     "next": "Next Phase",
     "bank": "BANK",
     "burn": "BURN"
+  },
+  "voting": {
+    "strongest_link": "STRONGEST LINK",
+    "weakest_link": "WEAKEST LINK",
+    "vote_out": "VOTE OUT",
+    "hide": "Hide",
+    "show": "Show",
+    "weakest_strongest_links": "weakest/strongest links",
+    "votes": "Votes: {votes}",
+    "cast": "CAST THE VOTES",
+    "reset": "Reset Votes",
+    "title": "Voting Phase",
+    "tie_title": "TIE!",
+    "tie_desc": "There's a tie between {players}. The strongest link ({link}) must decide which player must be eliminated."
   }
 }

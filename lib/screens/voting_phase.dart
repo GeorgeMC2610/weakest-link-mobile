@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/screens/last_round.dart';
 import 'package:weakest_link/screens/round_start.dart';
@@ -102,8 +103,11 @@ class _VotingPhaseState extends State<VotingPhase> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("TIE BREAKER!"),
-        content: Text("There's a tie between ${tiedPlayers.map((p) => p.name).join(", ")}. ${widget.strongestLink.name}, as the Strongest Link, must decide who is eliminated."),
+        title: Text(translate('voting.tie_title')),
+        content: Text(translate('voting.tie_desc', args: {
+          'players': tiedPlayers.map((p) => p.name).join(", "),
+          'link': widget.strongestLink.name
+        })),
         actions: tiedPlayers.map((p) => TextButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -119,13 +123,13 @@ class _VotingPhaseState extends State<VotingPhase> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Voting Phase"),
+        title: Text(translate('voting.title')),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetVotes,
-            tooltip: "Reset Votes",
+            tooltip: translate('voting.reset'),
           )
         ],
       ),
@@ -136,12 +140,12 @@ class _VotingPhaseState extends State<VotingPhase> {
             child: Column(
               children: [
                 Text(
-                  "CAST THE VOTES",
+                  translate('voting.cast'),
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Votes: $_totalVotes / ${_activePlayers.length}",
+                  translate('voting.votes', args: {'votes': '$_totalVotes / ${_activePlayers.length}'}),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: _totalVotes == _activePlayers.length ? Colors.green : Colors.grey,
                   ),
@@ -153,7 +157,7 @@ class _VotingPhaseState extends State<VotingPhase> {
                       _showLinks = !_showLinks;
                     });
                   },
-                  label: Text("${_showLinks ? "Hide" : "Show"} Weakest/Strongest Links"),
+                  label: Text("${_showLinks ? translate('voting.hide') : translate('voting.show')} ${translate('voting.weakest_strongest_links')}"),
                 )
               ],
             ),
@@ -180,12 +184,12 @@ class _VotingPhaseState extends State<VotingPhase> {
                     subtitle: Row(
                       children: [
                         if (isStrongest && showLinks)
-                          const Padding(
-                            padding: EdgeInsets.only(right: 8.0),
-                            child: Text("STRONGEST LINK", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10)),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Text(translate('voting.strongest_link'), style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10)),
                           ),
                         if (isWeakest && showLinks)
-                          const Text("WEAKEST LINK", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 10)),
+                          Text(translate('voting.weakest_link'), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 10)),
                       ],
                     ),
                     trailing: Row(
@@ -223,7 +227,7 @@ class _VotingPhaseState extends State<VotingPhase> {
               height: 60,
               child: FilledButton(
                 onPressed: _totalVotes == _activePlayers.length ? _confirmVotes : null,
-                child: const Text("VOTE OUT", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                child: Text(translate('voting.vote_out'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               ),
             ),
           ),
