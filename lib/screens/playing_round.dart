@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:provider/provider.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
@@ -196,7 +197,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Banked: $_roundBankedPoints'),
+            Text(translate('rounds.banked', args: {'points': _roundBankedPoints})),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
@@ -275,7 +276,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text("CURRENT PLAYER", style: TextStyle(fontSize: 12, letterSpacing: 2)),
+                        Text(translate('rounds.current_player'), style: const TextStyle(fontSize: 12, letterSpacing: 2)),
                         Text(
                           currentPlayer.name.toUpperCase(),
                           textAlign: TextAlign.center,
@@ -305,7 +306,8 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                         _showAnswer = true;
                       });
                     },
-                    label: const Text('Reveal Answer'),
+                    label: Text(translate('rounds.reveal_answer'),
+                    ),
                     icon: const Icon(Icons.remove_red_eye_rounded)
                   ) :
                   Text(
@@ -361,8 +363,8 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                                 backgroundColor: Theme.of(context).colorScheme.primary,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: const Text(
-                                "NEXT",
+                              child: Text(
+                                translate('rounds.next'),
                                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -385,7 +387,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                           ElevatedButton.icon(
                             onPressed: _isRoundActive ? _handleCorrect : null,
                             icon: const Icon(Icons.check_circle),
-                            label: const Text("CORRECT"),
+                            label: Text(translate('rounds.correct')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
@@ -395,7 +397,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                           ElevatedButton.icon(
                             onPressed: _isRoundActive ? _handleWrong : null,
                             icon: const Icon(Icons.cancel),
-                            label: const Text("WRONG"),
+                            label: Text(translate('rounds.wrong')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                               foregroundColor: Colors.white,
@@ -405,7 +407,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                           FilledButton.tonalIcon(
                             onPressed: (_isRoundActive && _currentChainIndex > 0) ? _handleBank : null,
                             icon: const Icon(Icons.account_balance),
-                            label: const Text("BANK"),
+                            label: Text(translate('rounds.bank')),
                             style: FilledButton.styleFrom(
                               textStyle: const TextStyle(fontWeight: FontWeight.bold),
                             ),
@@ -413,7 +415,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                           OutlinedButton.icon(
                             onPressed: _isRoundActive ? _handleBurn : null,
                             icon: const Icon(Icons.local_fire_department),
-                            label: const Text("BURN"),
+                            label: Text(translate('rounds.burn')),
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: Colors.orange, width: 2),
                               foregroundColor: Colors.orange.shade800,

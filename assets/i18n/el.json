@@ -20,5 +20,23 @@
     "language": "Γλώσσα",
     "app_version": "Έκδοση Εφαρμογής",
     "select_language": "Επιλογή Γλώσσας"
+  },
+  "rounds": {
+    "last_round": "ΤΕΛΕΥΤΑΙΟΣ ΓΥΡΟΣ - {grand_prize}",
+    "round": "{number}ος ΓΥΡΟΣ",
+    "correct": "ΣΩΣΤΟ",
+    "wrong": "ΛΑΘΟΣ",
+    "winner": "ΝΙΚΙΤΗΣ",
+    "banked": "Αποταμιευμένοι: {points} πόντοι",
+    "exit_game": "Εξοδος Παιχνιδιού",
+    "sudden_death": "Ξαφνικός Θάνατος",
+    "current_player": "ΠΑΙΚΤΗΣ",
+    "reveal_answer": "Εμφάνιση Απάντησης",
+    "next": "Επόμενη φάση",
+    "bank": "ΒΑΝΚ",
+    "burn": "ΚΑΨΤΕ ΤΗΝ ΕΡΩΤΗΣΗ"
+  },
+  "voting": {
+
   }
 }

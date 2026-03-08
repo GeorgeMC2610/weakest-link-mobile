@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/services/game_manager.dart';
@@ -112,7 +113,7 @@ class _LastRoundState extends State<LastRound> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('FINAL ROUND - \$${widget.grandPrize}'),
+        title: Text(translate('rounds.last_round', args: {'grand_prize': widget.grandPrize})),
         backgroundColor: Colors.amber.shade700,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
@@ -156,7 +157,7 @@ class _LastRoundState extends State<LastRound> {
                       _showAnswer = true;
                     });
                   },
-                  label: const Text('Reveal Answer'),
+                  label: Text(translate('rounds.reveal_answer')),
                   icon: const Icon(Icons.remove_red_eye_rounded)
               ) : Text(
                 "(${_currentQuestion.answer})",
@@ -173,7 +174,7 @@ class _LastRoundState extends State<LastRound> {
                     child: ElevatedButton.icon(
                       onPressed: () => _handleAnswer(true),
                       icon: const Icon(Icons.check_circle, size: 32),
-                      label: const Text("CORRECT", style: TextStyle(fontSize: 18)),
+                      label: Text(translate('rounds.correct'), style: const TextStyle(fontSize: 18)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
@@ -186,7 +187,7 @@ class _LastRoundState extends State<LastRound> {
                     child: ElevatedButton.icon(
                       onPressed: () => _handleAnswer(false),
                       icon: const Icon(Icons.cancel, size: 32),
-                      label: const Text("WRONG", style: TextStyle(fontSize: 18)),
+                      label: Text(translate('rounds.wrong'), style: const TextStyle(fontSize: 18)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
@@ -200,7 +201,7 @@ class _LastRoundState extends State<LastRound> {
               const Icon(Icons.emoji_events, size: 100, color: Colors.amber),
               const SizedBox(height: 16),
               Text(
-                "WINNER",
+                translate('rounds.winner'),
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
@@ -212,7 +213,7 @@ class _LastRoundState extends State<LastRound> {
               ),
               const SizedBox(height: 24),
               Text(
-                "Banked: \$${widget.grandPrize}",
+                translate('rounds.banked', args: {'points': widget.grandPrize}),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const Spacer(),
@@ -220,7 +221,7 @@ class _LastRoundState extends State<LastRound> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                  child: const Text("EXIT GAME"),
+                  child: Text(translate('rounds.exit_game')),
                 ),
               ),
             ],
@@ -240,7 +241,7 @@ class _LastRoundState extends State<LastRound> {
           Padding(
             padding: const EdgeInsets.only(top: 16.0),
             child: Text(
-              "SUDDEN DEATH",
+              translate('rounds.sudden_death'),
               style: TextStyle(
                 color: Colors.red.shade900,
                 fontWeight: FontWeight.bold,

@@ -20,5 +20,20 @@
     "language": "Language",
     "app_version": "App Version",
     "select_language": "Select Language"
+  },
+  "rounds": {
+    "last_round": "FINAL ROUND - {grand_prize}",
+    "round": "ROUND {number}",
+    "correct": "CORRECT",
+    "wrong": "WRONG",
+    "winner": "WINNER",
+    "banked": "Banked: {points} points",
+    "exit_game": "Exit Game",
+    "sudden_death": "Sudden Death",
+    "current_player": "CURRENT PLAYER",
+    "reveal_answer": "Reveal Answer",
+    "next": "Next Phase",
+    "bank": "BANK",
+    "burn": "BURN"
   }
 }
