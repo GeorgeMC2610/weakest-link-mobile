@@ -15,6 +15,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   shared_preferences: any
+  auto_size_text: any
   flutter_translate: ^4.0.4
   flutter_localizations:
     sdk: flutter

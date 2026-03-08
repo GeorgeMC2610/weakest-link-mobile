@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_translate/flutter_translate.dart';
 import 'package:provider/provider.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/screens/voting_phase.dart';
@@ -197,7 +198,15 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(translate('rounds.banked', args: {'points': _roundBankedPoints})),
+            Expanded(
+              child: AutoSizeText(
+                translate('rounds.banked', args: {'points': _roundBankedPoints}),
+                maxLines: 1,
+                minFontSize: 10,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
@@ -365,7 +374,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                               ),
                               child: Text(
                                 translate('rounds.next'),
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -451,23 +460,16 @@ class StartingLightsPainter extends CustomPainter {
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round;
 
-    for (int i = 0; i < 12; i++) {
-      final angle = i * math.pi / 6;
+    for (int i = 0; i < 8; i++) {
+      final angle = i * math.pi / 4;
       Color color = Colors.grey.withOpacity(0.1);
-
-      int total = 12;
-      int half = total ~/ 2;
-
-      int steps = (progress / 0.1).floor();
-      steps = steps.clamp(0, half);
-
-      if ((i < steps) || (i >= 6 && i < 6 + steps)) {
-        color = Colors.lightBlueAccent;
-      }
-      if (progress > 0.75) {
+      if (progress > 0.66) {
         color = Colors.indigo;
+      } else if (progress > 0.33) {
+        if (i == 0 || i == 4 || i == 5 || i == 7) color = Colors.lightBlueAccent;
+      } else if (progress > 0) {
+        if (i == 0 || i == 4) color = Colors.lightBlueAccent;
       }
-
       paint.color = color;
       final start = Offset(
         center.dx + (radius - lineLength / 2) * math.cos(angle),
@@ -482,10 +484,10 @@ class StartingLightsPainter extends CustomPainter {
     
     final textPainter = TextPainter(
       text: TextSpan(
-        text: translate('rounds.round', args: { 'number': roundNumber }),
+        text: "ROUND $roundNumber",
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 20,
+          fontSize: 28,
           fontWeight: FontWeight.bold,
         ),
       ),
