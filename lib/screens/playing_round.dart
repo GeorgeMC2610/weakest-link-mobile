@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:provider/provider.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/screens/voting_phase.dart';
@@ -196,7 +198,15 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Banked: $_roundBankedPoints'),
+            Expanded(
+              child: AutoSizeText(
+                translate('rounds.banked', args: {'points': _roundBankedPoints}),
+                maxLines: 1,
+                minFontSize: 10,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
@@ -275,7 +285,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text("CURRENT PLAYER", style: TextStyle(fontSize: 12, letterSpacing: 2)),
+                        Text(translate('rounds.current_player'), style: const TextStyle(fontSize: 12, letterSpacing: 2)),
                         Text(
                           currentPlayer.name.toUpperCase(),
                           textAlign: TextAlign.center,
@@ -305,7 +315,8 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                         _showAnswer = true;
                       });
                     },
-                    label: const Text('Reveal Answer'),
+                    label: Text(translate('rounds.reveal_answer'),
+                    ),
                     icon: const Icon(Icons.remove_red_eye_rounded)
                   ) :
                   Text(
@@ -361,9 +372,9 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                                 backgroundColor: Theme.of(context).colorScheme.primary,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: const Text(
-                                "NEXT",
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              child: Text(
+                                translate('rounds.next'),
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -385,7 +396,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                           ElevatedButton.icon(
                             onPressed: _isRoundActive ? _handleCorrect : null,
                             icon: const Icon(Icons.check_circle),
-                            label: const Text("CORRECT"),
+                            label: Text(translate('rounds.correct')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
@@ -395,7 +406,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                           ElevatedButton.icon(
                             onPressed: _isRoundActive ? _handleWrong : null,
                             icon: const Icon(Icons.cancel),
-                            label: const Text("WRONG"),
+                            label: Text(translate('rounds.wrong')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
                               foregroundColor: Colors.white,
@@ -405,7 +416,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                           FilledButton.tonalIcon(
                             onPressed: (_isRoundActive && _currentChainIndex > 0) ? _handleBank : null,
                             icon: const Icon(Icons.account_balance),
-                            label: const Text("BANK"),
+                            label: Text(translate('rounds.bank')),
                             style: FilledButton.styleFrom(
                               textStyle: const TextStyle(fontWeight: FontWeight.bold),
                             ),
@@ -413,7 +424,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                           OutlinedButton.icon(
                             onPressed: _isRoundActive ? _handleBurn : null,
                             icon: const Icon(Icons.local_fire_department),
-                            label: const Text("BURN"),
+                            label: Text(translate('rounds.burn')),
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: Colors.orange, width: 2),
                               foregroundColor: Colors.orange.shade800,
@@ -449,23 +460,16 @@ class StartingLightsPainter extends CustomPainter {
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round;
 
-    for (int i = 0; i < 12; i++) {
-      final angle = i * math.pi / 6;
+    for (int i = 0; i < 8; i++) {
+      final angle = i * math.pi / 4;
       Color color = Colors.grey.withOpacity(0.1);
-
-      int total = 12;
-      int half = total ~/ 2;
-
-      int steps = (progress / 0.1).floor();
-      steps = steps.clamp(0, half);
-
-      if ((i < steps) || (i >= 6 && i < 6 + steps)) {
-        color = Colors.lightBlueAccent;
-      }
-      if (progress > 0.75) {
+      if (progress > 0.66) {
         color = Colors.indigo;
+      } else if (progress > 0.33) {
+        if (i == 0 || i == 4 || i == 5 || i == 7) color = Colors.lightBlueAccent;
+      } else if (progress > 0) {
+        if (i == 0 || i == 4) color = Colors.lightBlueAccent;
       }
-
       paint.color = color;
       final start = Offset(
         center.dx + (radius - lineLength / 2) * math.cos(angle),

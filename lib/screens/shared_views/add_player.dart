@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 
 import '../../classes/player.dart';
 
@@ -26,23 +27,23 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
     final currentColor = Color.fromARGB(255, _r.toInt(), _g.toInt(), _b.toInt());
 
     return AlertDialog(
-      title: const Text('Add New Player'),
+      title: Text(translate('add_player.title'),),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Player Name',
-                hintText: 'Enter name',
+              decoration: InputDecoration(
+                labelText: translate('add_player.name'),
+                hintText: translate('add_player.name'),
               ),
               textCapitalization: TextCapitalization.words,
             ),
             const SizedBox(height: 24),
             Row(
               children: [
-                const Text('Selected Color: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(translate('add_player.selected_color'), style: const TextStyle(fontWeight: FontWeight.bold)),
                 Container(
                   width: 30,
                   height: 30,
@@ -62,9 +63,9 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildRGBSlider('R', _r, Colors.red, (val) => setState(() => _r = val)),
-            _buildRGBSlider('G', _g, Colors.green, (val) => setState(() => _g = val)),
-            _buildRGBSlider('B', _b, Colors.blue, (val) => setState(() => _b = val)),
+            _buildRGBSlider(translate('add_player.r'), _r, Colors.red, (val) => setState(() => _r = val)),
+            _buildRGBSlider(translate('add_player.g'), _g, Colors.green, (val) => setState(() => _g = val)),
+            _buildRGBSlider(translate('add_player.b'), _b, Colors.blue, (val) => setState(() => _b = val)),
           ],
         ),
       ),
@@ -75,7 +76,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
             backgroundColor: Theme.of(context).colorScheme.errorContainer,
             foregroundColor: Theme.of(context).colorScheme.onErrorContainer
           ),
-          label: const Text('Close'),
+          label: Text(translate('add_player.close')),
           icon: const Icon(Icons.close)
         ),
         FilledButton.tonalIcon(
@@ -87,7 +88,7 @@ class _AddPlayerDialogState extends State<AddPlayerDialog> {
               );
             }
           },
-          label: const Text('Add Player'),
+          label: Text(translate('add_player.add_player')),
           icon: const Icon(Icons.add)
         ),
       ],

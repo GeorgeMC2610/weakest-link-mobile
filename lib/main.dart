@@ -4,50 +4,75 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:weakest_link/screens/home.dart';
 import 'package:weakest_link/services/game_manager.dart';
+import 'package:weakest_link/services/language_provider.dart';
 import 'package:weakest_link/services/player_service.dart';
 import 'package:weakest_link/services/question_service.dart';
+import 'package:flutter_translate/flutter_translate.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'classes/player.dart';
 import 'classes/question.dart';
 import 'classes/question_collection.dart';
 
 void main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Initialize Hive for Flutter
+  // 1. Initialize Hive for Flutter
   await Hive.initFlutter();
 
-  // 3. Register Type Adapters (Must match the IDs in your models)
+  // 2. Register Type Adapters (Must match the IDs in models)
   Hive.registerAdapter(PlayerAdapter());
   Hive.registerAdapter(QuestionAdapter());
   Hive.registerAdapter(QuestionCollectionAdapter());
 
-  // 4. Open Boxes via Services
+  // 3. Open Boxes via Services
   await PlayerService.init();
   await QuestionService.init();
 
+  // 4. Initialize Localization
+  var delegate = await LocalizationDelegate.create(
+    preferences: LanguageProvider(),
+    fallbackLocale: 'en',
+    supportedLocales: ['en', 'el'],
+  );
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => GameManager(),
-      child: const MyApp(),
-    )
+    LocalizedApp(
+      delegate,
+      ChangeNotifierProvider(
+        create: (_) => GameManager(),
+        child: const MyApp(),
+      ),
+    ),
   );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
+    var localizationDelegate = LocalizedApp.of(context).delegate;
+
+    return LocalizationProvider(
+      state: LocalizationProvider.of(context).state,
+      child: MaterialApp(
+        title: 'Weakest Link',
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          localizationDelegate,
+        ],
+        supportedLocales: localizationDelegate.supportedLocales,
+        locale: localizationDelegate.currentLocale,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+          useMaterial3: true,
+        ),
+        home: const Home(),
       ),
-      home: const Home(),
     );
   }
 }

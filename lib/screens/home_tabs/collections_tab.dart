@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/classes/question_collection.dart';
 
 class CollectionsTab extends StatelessWidget {
@@ -36,7 +37,7 @@ class CollectionsTab extends StatelessWidget {
                     children: [
                       Text(collection.title),
                       Text(
-                        '$count questions',
+                        translate('questions.questions', args: {'count': count}),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               color: isSelected
                                   ? Theme.of(context).colorScheme.onPrimaryContainer
@@ -52,7 +53,7 @@ class CollectionsTab extends StatelessWidget {
               }),
               ActionChip(
                 avatar: const Icon(Icons.menu),
-                label: const Text('Manage'),
+                label: Text(translate('questions.manage')),
                 onPressed: onAddCollection,
               ),
             ],
