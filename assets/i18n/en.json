@@ -4,14 +4,47 @@
     "players": "Players",
     "questions": "Questions",
     "settings": "Settings",
-    "add_player": "Add Player",
+    "add_player": "Add",
     "done_editing": "Done editing",
     "add_collection": "Add Collection",
     "default_questions": "Default Questions",
     "start_game": "Start Game"
   },
+  "add_player": {
+    "title": "Add New Player",
+    "r": "R",
+    "g": "G",
+    "b": "B",
+    "name": "Name",
+    "selected_color": "Selected Color: ",
+    "close": "Close",
+    "add_player": "Add Player"
+  },
   "questions": {
-    "manage": "Manage"
+    "manage": "Manage",
+    "manage_title": "Manage Collections",
+    "new_collection": "New Collection",
+    "no_collections": "Νο collections found! Create one.",
+    "questions": "{count} questions",
+    "question": "Question {count}",
+    "collection_title": "Collection Title",
+    "question_label": "Question",
+    "answer_label": "Answer",
+    "required": "Required",
+    "add_question": "Add Question",
+    "no_title": "Please enter a title",
+    "title_exists": "Title already exists",
+    "difficulty": "Difficulty: ",
+    "add_collection": "Add Collection",
+    "edit_collection": "Edit Collection",
+    "at_least_one": "Please add at least one question",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}/{total}",
+    "delete_collection": "Delete Collection",
+    "delete_collection_desc": "Are you sure you want to delete collection {title}?",
+    "cancel": "CANCEL",
+    "delete": "DELETE"
   },
   "settings": {
     "host_mode": "Host Mode",
@@ -19,7 +52,8 @@
     "host_mode_desc2": "Answers and weakest/strongest links are always revealed.",
     "language": "Language",
     "app_version": "App Version",
-    "select_language": "Select Language"
+    "select_language": "Select Language",
+    "drop_to_delete": "Drop here to delete"
   },
   "round_start": {
     "round": "Round {number}",

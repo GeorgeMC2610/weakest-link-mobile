@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/classes/question_collection.dart';
 import 'package:weakest_link/services/question_service.dart';
 import 'package:weakest_link/screens/shared_views/add_collection.dart';
@@ -47,16 +48,16 @@ class _QuestionCollectionsState extends State<QuestionCollections> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Collection'),
-        content: Text('Are you sure you want to delete "${collection.title}"?'),
+        title: Text(translate('questions.delete_collection')),
+        content: Text(translate('questions.delete_collection_desc', args: {'title': collection.title})),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('CANCEL'),
+            child: Text(translate('questions.cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('DELETE', style: TextStyle(color: Colors.red)),
+            child: Text(translate('questions.delete'), style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -72,11 +73,11 @@ class _QuestionCollectionsState extends State<QuestionCollections> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Collections'),
+        title: Text(translate('questions.manage_title')),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: _collections.isEmpty
-          ? const Center(child: Text('No collections found. Add one!'))
+          ? Center(child: Text(translate('questions.no_collections')))
           : ListView.builder(
               itemCount: _collections.length,
               padding: const EdgeInsets.all(8),
@@ -85,7 +86,7 @@ class _QuestionCollectionsState extends State<QuestionCollections> {
                 return Card(
                   child: ListTile(
                     title: Text(collection.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('${collection.questions.length} questions'),
+                    subtitle: Text(translate('questions.questions', args: {'count': collection.questions.length})),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -106,7 +107,7 @@ class _QuestionCollectionsState extends State<QuestionCollections> {
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToAddEdit(),
-        label: const Text('New Collection'),
+        label: Text(translate('questions.new_collection')),
         icon: const Icon(Icons.add),
       ),
     );

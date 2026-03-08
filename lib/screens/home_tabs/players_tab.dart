@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/screens/shared_views/add_player.dart';
 import 'dart:math' as math;
 
@@ -109,7 +110,7 @@ class PlayersTab extends StatelessWidget {
                   if (!isEditing)
                     ActionChip(
                       avatar: const Icon(Icons.add),
-                      label: const Text('Add'),
+                      label: Text(translate('home.add_player')),
                       onPressed: () async {
                         final newPlayer = await showDialog<Player>(
                           context: context,
@@ -151,7 +152,7 @@ class PlayersTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Drop here to delete',
+                        translate('home.drop_to_delete'),
                         style: TextStyle(
                           color: candidateData.isNotEmpty ? Colors.red : Colors.grey,
                           fontWeight: candidateData.isNotEmpty ? FontWeight.bold : FontWeight.normal,

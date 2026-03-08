@@ -8,10 +8,44 @@
     "add_collection": "Προσθήκη Συλλογής",
     "done_editing": "Τέλος επεξεργασίας",
     "default_questions": "Προεπιλεγμένες Ερωτήσεις",
-    "start_game": "Έναρξη Παιχνιδιού"
+    "start_game": "Έναρξη Παιχνιδιού",
+    "drop_to_delete": "Σύρετε εδώ για διαγραφή"
+  },
+  "add_player": {
+    "title": "Προσθήκη Παίκτη",
+    "r": "Κ",
+    "g": "Π",
+    "b": "Μ",
+    "name": "Όνομα",
+    "selected_color": "Επιλεγμένο Χρώμα: ",
+    "close": "Κλείσιμο",
+    "add_player": "Προσθήκη"
   },
   "questions": {
-    "manage": "Διαχείριση"
+    "manage": "Διαχείριση",
+    "manage_title": "Διαχείριση Συλλογών",
+    "new_collection": "Νέα Συλλογή",
+    "no_collections": "Δεν υπάρχουν συλλογές! Δημιουργήστε μία.",
+    "questions": "{count} ερωτήσεις",
+    "question": "Ερώτηση {count}",
+    "collection_title": "Όνομα Συλλογής",
+    "question_label": "Ερώτηση",
+    "answer_label": "Απάντηση",
+    "required": "Υποχρεωτικό πεδίο",
+    "no_title": "Παρακαλώ εισάγετε έναν τίτλο",
+    "title_exists": "Ο τίτλος υπάρχει ήδη",
+    "add_question": "Προσθήκη Ερώτησης",
+    "difficulty": "Δυσκολία: ",
+    "add_collection": "Προσθήκη Συλλογής",
+    "edit_collection": "Επεξεργασία Συλλογής",
+    "at_least_one": "Παρακαλώ εισάγετε τουλάχιστον μία ερώτηση",
+    "previous": "Προηγούμενη",
+    "next": "Επόμενη",
+    "page": "Σελίδα {page}/{total}",
+    "delete_collection": "Διαγραφή Συλλογής",
+    "delete_collection_desc": "Είστε σίγουροι ότι θέλετε να διαγράψετε τη συλλογή {title};",
+    "cancel": "ΑΚΥΡΟ",
+    "delete": "ΔΙΑΓΡΑΦΗ"
   },
   "settings": {
     "host_mode": "Λειτουργία Παρουσιαστή",

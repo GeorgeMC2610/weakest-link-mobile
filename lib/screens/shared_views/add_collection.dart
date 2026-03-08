@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/classes/question_collection.dart';
 import 'package:weakest_link/services/question_service.dart';
@@ -61,7 +62,7 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
     if (_formKey.currentState!.validate()) {
       if (_questions.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please add at least one question')),
+          SnackBar(content: Text(translate('questions.at_least_one'))),
         );
         return;
       }
@@ -93,7 +94,7 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.collection == null ? 'New Collection' : 'Edit Collection'),
+        title: Text(widget.collection == null ? translate('questions.add_collection') : translate('questions.edit_collection')),
         actions: [
           IconButton(
             onPressed: _save,
@@ -110,19 +111,19 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
               padding: const EdgeInsets.all(16.0),
               child: TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Collection Title',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: translate('questions.collection_title'),
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a title';
+                    return translate('questions.no_title');
                   }
                   if (widget.collection == null || value.trim() != widget.collection!.title) {
                     final exists = QuestionService.getAllCollections().any(
                       (c) => c.title.toLowerCase() == value.trim().toLowerCase(),
                     );
-                    if (exists) return 'Title already exists';
+                    if (exists) return translate('questions.title_exists');
                   }
                   return null;
                 },
@@ -146,7 +147,7 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Question ${actualIndex + 1}',
+                              Text(translate('questions.question', args: {'count': actualIndex + 1}),
                                   style: const TextStyle(fontWeight: FontWeight.bold)),
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
@@ -156,28 +157,28 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
                           ),
                           TextFormField(
                             initialValue: _questions[actualIndex].title,
-                            decoration: const InputDecoration(labelText: 'Question'),
+                            decoration: InputDecoration(labelText: translate('questions.question_label')),
                             onChanged: (val) => _questions[actualIndex] = Question(
                               title: val,
                               answer: _questions[actualIndex].answer,
                               difficulty: _questions[actualIndex].difficulty,
                             ),
-                            validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                            validator: (val) => val == null || val.isEmpty ? translate('questions.required') : null,
                           ),
                           TextFormField(
                             initialValue: _questions[actualIndex].answer,
-                            decoration: const InputDecoration(labelText: 'Answer'),
+                            decoration: InputDecoration(labelText:  translate('questions.answer_label')),
                             onChanged: (val) => _questions[actualIndex] = Question(
                               title: _questions[actualIndex].title,
                               answer: val,
                               difficulty: _questions[actualIndex].difficulty,
                             ),
-                            validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                            validator: (val) => val == null || val.isEmpty ?  translate('questions.required') : null,
                           ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              const Text('Difficulty: '),
+                              Text(translate('questions.difficulty')),
                               Expanded(
                                 child: Slider(
                                   value: _questions[actualIndex].difficulty.toDouble(),
@@ -211,7 +212,7 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addQuestion,
-        label: const Text('Add Question'),
+        label: Text(translate('questions.add_question')),
         icon: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomAppBar(
@@ -225,10 +226,10 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
                     ? () => setState(() => _currentPage--)
                     : null,
                 icon: const Icon(Icons.chevron_left),
-                label: const Text('Previous'),
+                label: Text(translate('questions.previous')),
               ),
               Text(
-                'Page ${_currentPage + 1} / ${totalPages == 0 ? 1 : totalPages}',
+                translate('questions.page', args: {'page': _currentPage + 1, 'total': totalPages}),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               TextButton.icon(
@@ -236,7 +237,7 @@ class _AddCollectionDialogState extends State<AddCollectionDialog> {
                     ? () => setState(() => _currentPage++)
                     : null,
                 icon: const Icon(Icons.chevron_right),
-                label: const Text('Next'),
+                label: Text(translate('questions.next')),
               ),
             ],
           ),

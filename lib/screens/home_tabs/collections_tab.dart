@@ -37,7 +37,7 @@ class CollectionsTab extends StatelessWidget {
                     children: [
                       Text(collection.title),
                       Text(
-                        '$count ${translate("home.questions").toLowerCase()}',
+                        translate('questions.questions', args: {'count': count}),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               color: isSelected
                                   ? Theme.of(context).colorScheme.onPrimaryContainer
