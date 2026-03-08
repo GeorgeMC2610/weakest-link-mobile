@@ -21,6 +21,20 @@
     "app_version": "App Version",
     "select_language": "Select Language"
   },
+  "round_start": {
+    "round": "Round {number}",
+    "final": "Final",
+    "final_round": "FINAL ROUND",
+    "decisive_round": "DECISIVE ROUND",
+    "remaining_players": "Remaining Players:",
+    "finalists": "The Finalists:",
+    "pass_or_play": "{strongest}, as the Strongest Link, pass or play?",
+    "pass": "Pass",
+    "play": "Play",
+    "time_limit": "TIME LIMIT",
+    "clock": "CLOCK!",
+    "start_final": "START FINAL"
+  },
   "rounds": {
     "last_round": "FINAL ROUND - {grand_prize}",
     "round": "ROUND {number}",

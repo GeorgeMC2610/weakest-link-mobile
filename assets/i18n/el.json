@@ -21,6 +21,20 @@
     "app_version": "Έκδοση Εφαρμογής",
     "select_language": "Επιλογή Γλώσσας"
   },
+  "round_start": {
+    "round": "{number}ος Γύρος",
+    "final": "Τελικός",
+    "final_round": "ΤΕΛΙΚΟΣ ΓΥΡΟΣ",
+    "decisive_round": "ΑΠΟΦΑΣΙΣΤΙΚΟΣ ΓΥΡΟΣ",
+    "remaining_players": "Εναπομείναντες Παίκτες:",
+    "finalists": "Φιναλίστ:",
+    "pass_or_play": "{strongest}, ως ο πιο δυνατός κρίκος, θα παίξετε πρώτοι ή δεύτεροι;",
+    "pass": "Δεύτεροι",
+    "play": "Πρώτοι",
+    "time_limit": "ΧΡΟΝΟΣ",
+    "clock": "ΡΟΛΟΪ!",
+    "start_final": "ΕΚΚΙΝΗΣΗ ΤΕΛΙΚΟΥ"
+  },
   "rounds": {
     "last_round": "ΤΕΛΕΥΤΑΙΟΣ ΓΥΡΟΣ - {grand_prize}",
     "round": "{number}ος ΓΥΡΟΣ",

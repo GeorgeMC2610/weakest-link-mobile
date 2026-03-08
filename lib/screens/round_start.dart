@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
 import 'package:weakest_link/services/game_manager.dart';
@@ -80,7 +81,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isLastRound ? 'Final' : 'Round ${widget.roundNumber}'),
+        title: Text(_isLastRound ? translate('round_start.final') : translate('round_start.round', args: {'number': widget.roundNumber})),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
@@ -88,7 +89,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
         child: Column(
           children: [
             Text(
-              _isLastRound ? 'FINAL ROUND' : (isDecisiveRound ? 'DECISIVE ROUND' : 'Round ${widget.roundNumber}'),
+              _isLastRound ? translate('round_start.final_round') : (isDecisiveRound ? translate('round_start.decisive_round') : translate('round_start.round', args: {'number': widget.roundNumber})),
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
@@ -96,7 +97,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
             ),
             const SizedBox(height: 24),
             Text(
-              _isLastRound ? 'The Finalists:' : 'Remaining Players:',
+              _isLastRound ? translate('round_start.finalists') : translate('round_start.remaining_players'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
@@ -135,7 +136,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
             ),
             if (_isLastRound && strongestLink != null) ...[
                Text(
-                '${strongestLink.name}, as Strongest Link,\ndo you want to play or pass?',
+                 translate('round_start.pass_or_play', args: {'strongest': strongestLink.name}),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
@@ -144,12 +145,12 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ChoiceChip(
-                    label: const Text('Play'),
+                    label: Text(translate('round_start.play')),
                     selected: _playFirst == 1,
                     onSelected: (selected) => setState(() => _playFirst = 1),
                   ),
                   ChoiceChip(
-                    label: const Text('Pass'),
+                    label:  Text(translate('round_start.pass')),
                     selected: _playFirst == 2,
                     onSelected: (selected) => setState(() => _playFirst = 2),
                   ),
@@ -187,7 +188,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                       ],
                     ),
                     Text(
-                      'TIME LIMIT',
+                      translate('round_start.time_limit'),
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                             color: Theme.of(context).colorScheme.onTertiaryContainer,
                             letterSpacing: 4.0,
@@ -253,7 +254,7 @@ class _RoundStartState extends State<RoundStart> with SingleTickerProviderStateM
                         }
                       },
                       child: Text(
-                        _isLastRound ? 'START FINAL' : 'CLOCK!',
+                        _isLastRound ? translate('round_start.start_final') : translate('round_start.clock'),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
