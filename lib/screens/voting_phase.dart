@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_translate/flutter_translate.dart';
 import 'package:weakest_link/classes/player.dart';
-import 'package:weakest_link/screens/last_round.dart';
 import 'package:weakest_link/screens/round_start.dart';
 import 'package:weakest_link/services/game_manager.dart';
 
@@ -123,8 +122,8 @@ class _VotingPhaseState extends State<VotingPhase> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.black,
         title: Text(translate('voting.title')),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -133,105 +132,195 @@ class _VotingPhaseState extends State<VotingPhase> {
           )
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Text(
-                  translate('voting.cast'),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  translate('voting.votes', args: {'votes': '$_totalVotes / ${_activePlayers.length}'}),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: _totalVotes == _activePlayers.length ? Colors.green : Colors.grey,
-                  ),
-                ),
-                FilledButton.tonalIcon(
-                  icon: Icon(showLinks ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () {
-                    setState(() {
-                      _showLinks = !_showLinks;
-                    });
-                  },
-                  label: Text("${_showLinks ? translate('voting.hide') : translate('voting.show')} ${translate('voting.weakest_strongest_links')}"),
-                )
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(0.0, -0.6),
+            radius: 1.2,
+            colors: [
+              Color(0xFF081226),
+              Colors.black,
+            ],
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _activePlayers.length,
-              itemBuilder: (context, index) {
-                final player = _activePlayers[index];
-                final isStrongest = player == widget.strongestLink;
-                final isWeakest = player == widget.weakestLink;
-                final voteCount = _votes[player] ?? 0;
-                
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    onTap: () => _handleVote(player),
-                    onLongPress: () => _handleRemoveVote(player),
-                    leading: CircleAvatar(
-                      backgroundColor: player.color,
-                      child: Text(player.name[0], style: const TextStyle(color: Colors.white)),
-                    ),
-                    title: Text(player.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    subtitle: Row(
-                      children: [
-                        if (isStrongest && showLinks)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Text(translate('voting.strongest_link'), style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10)),
-                          ),
-                        if (isWeakest && showLinks)
-                          Text(translate('voting.weakest_link'), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 10)),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (voteCount > 0)
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                            onPressed: () => _handleRemoveVote(player),
-                          ),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: voteCount > 0 ? Theme.of(context).colorScheme.primaryContainer : Colors.transparent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            "$voteCount",
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: voteCount > 0 ? Theme.of(context).colorScheme.onPrimaryContainer : Colors.grey,
-                            ),
-                          ),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Text(
+                    translate('voting.cast'),
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    translate('voting.votes', args: {
+                      'votes': '$_totalVotes / ${_activePlayers.length}'
+                    }),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
+                          color: _totalVotes == _activePlayers.length
+                              ? Colors.greenAccent
+                              : Colors.blueGrey.shade300,
                         ),
-                      ],
-                    ),
                   ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: FilledButton(
-                onPressed: _totalVotes == _activePlayers.length ? _confirmVotes : null,
-                child: Text(translate('voting.vote_out'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const SizedBox(height: 8),
+                  FilledButton.tonalIcon(
+                    icon:
+                        Icon(showLinks ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () {
+                      setState(() {
+                        _showLinks = !_showLinks;
+                      });
+                    },
+                    label: Text(
+                      "${_showLinks ? translate('voting.hide') : translate('voting.show')} ${translate('voting.weakest_strongest_links')}",
+                    ),
+                  )
+                ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: ListView.builder(
+                itemCount: _activePlayers.length,
+                itemBuilder: (context, index) {
+                  final player = _activePlayers[index];
+                  final isStrongest = player == widget.strongestLink;
+                  final isWeakest = player == widget.weakestLink;
+                  final voteCount = _votes[player] ?? 0;
+                  
+                  return Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.blueGrey.withOpacity(0.35),
+                          Colors.black.withOpacity(0.7),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: isWeakest
+                            ? Colors.redAccent
+                            : (isStrongest
+                                ? Colors.cyanAccent
+                                : Colors.blueGrey.shade700),
+                        width: isWeakest || isStrongest ? 2 : 1,
+                      ),
+                    ),
+                    child: ListTile(
+                      onTap: () => _handleVote(player),
+                      onLongPress: () => _handleRemoveVote(player),
+                      leading: CircleAvatar(
+                        backgroundColor: player.color,
+                        child: Text(
+                          player.name[0],
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      title: Text(
+                        player.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      subtitle: Row(
+                        children: [
+                          if (isStrongest && showLinks)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Text(
+                                translate('voting.strongest_link'),
+                                style: const TextStyle(
+                                  color: Colors.greenAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          if (isWeakest && showLinks)
+                            Text(
+                              translate('voting.weakest_link'),
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (voteCount > 0)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                color: Colors.redAccent,
+                              ),
+                              onPressed: () => _handleRemoveVote(player),
+                            ),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: voteCount > 0
+                                  ? Colors.cyanAccent.withOpacity(0.2)
+                                  : Colors.transparent,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: voteCount > 0
+                                    ? Colors.cyanAccent
+                                    : Colors.blueGrey.shade600,
+                              ),
+                            ),
+                            child: Text(
+                              "$voteCount",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    color: voteCount > 0
+                                        ? Colors.cyanAccent
+                                        : Colors.blueGrey.shade300,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: FilledButton(
+                  onPressed: _totalVotes == _activePlayers.length
+                      ? _confirmVotes
+                      : null,
+                  child: Text(
+                    translate('voting.vote_out'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

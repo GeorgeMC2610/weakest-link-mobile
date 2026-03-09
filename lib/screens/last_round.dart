@@ -113,119 +113,181 @@ class _LastRoundState extends State<LastRound> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(translate('rounds.last_round', args: {'grand_prize': widget.grandPrize})),
-        backgroundColor: Colors.amber.shade700,
+        title: Text(
+          translate('rounds.last_round',
+              args: {'grand_prize': widget.grandPrize}),
+        ),
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            _buildScoreBoard(),
-            const Spacer(),
-            
-            if (_winner == null) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  color: currentPlayer.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: currentPlayer.color, width: 4),
-                ),
-                child: Text(
-                  currentPlayer.name.toUpperCase(),
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: currentPlayer.color,
-                      ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              
-              Text(
-                _currentQuestion.title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              !showAnswer ? FilledButton.tonalIcon(
-                  onPressed: () {
-                    setState(() {
-                      _showAnswer = true;
-                    });
-                  },
-                  label: Text(translate('rounds.reveal_answer')),
-                  icon: const Icon(Icons.remove_red_eye_rounded)
-              ) : Text(
-                "(${_currentQuestion.answer})",
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.grey,
-                      fontStyle: FontStyle.italic,
-                    ),
-              ),
-              const Spacer(),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _handleAnswer(true),
-                      icon: const Icon(Icons.check_circle, size: 32),
-                      label: Text(translate('rounds.correct'), style: const TextStyle(fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _handleAnswer(false),
-                      icon: const Icon(Icons.cancel, size: 32),
-                      label: Text(translate('rounds.wrong'), style: const TextStyle(fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ] else ...[
-              const Icon(Icons.emoji_events, size: 100, color: Colors.amber),
-              const SizedBox(height: 16),
-              Text(
-                translate('rounds.winner'),
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                _winner!.name,
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: _winner!.color,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                translate('rounds.banked', args: {'points': widget.grandPrize}),
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                  child: Text(translate('rounds.exit_game')),
-                ),
-              ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(0.0, -0.5),
+            radius: 1.1,
+            colors: [
+              Color(0xFF160B22),
+              Colors.black,
             ],
-          ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              _buildScoreBoard(),
+              const Spacer(),
+              
+              if (_winner == null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(
+                      color: currentPlayer.color,
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: currentPlayer.color.withOpacity(0.7),
+                        blurRadius: 20,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    currentPlayer.name.toUpperCase(),
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineMedium
+                        ?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 4,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                Text(
+                  _currentQuestion.title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                !showAnswer
+                    ? FilledButton.tonalIcon(
+                        onPressed: () {
+                          setState(() {
+                            _showAnswer = true;
+                          });
+                        },
+                        label: Text(translate('rounds.reveal_answer')),
+                        icon:
+                            const Icon(Icons.remove_red_eye_rounded),
+                      )
+                    : Text(
+                        "(${_currentQuestion.answer})",
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(
+                              color: Colors.blueGrey.shade200,
+                              fontStyle: FontStyle.italic,
+                            ),
+                      ),
+                const Spacer(),
+                
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _handleAnswer(true),
+                        icon: const Icon(Icons.check_circle, size: 32),
+                        label: Text(
+                          translate('rounds.correct'),
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.greenAccent.shade400,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 20),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _handleAnswer(false),
+                        icon: const Icon(Icons.cancel, size: 32),
+                        label: Text(
+                          translate('rounds.wrong'),
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent.shade400,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 20),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                const Icon(
+                  Icons.emoji_events,
+                  size: 100,
+                  color: Colors.amber,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  translate('rounds.winner'),
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  _winner!.name,
+                  style: Theme.of(context)
+                      .textTheme
+                      .displayMedium
+                      ?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: _winner!.color,
+                      ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  translate('rounds.banked',
+                      args: {'points': widget.grandPrize}),
+                  style:
+                      Theme.of(context).textTheme.headlineSmall,
+                ),
+                const Spacer(),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () =>
+                        Navigator.of(context).popUntil(
+                            (route) => route.isFirst),
+                    child:
+                        Text(translate('rounds.exit_game')),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

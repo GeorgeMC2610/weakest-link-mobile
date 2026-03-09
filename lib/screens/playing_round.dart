@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_translate/flutter_translate.dart';
-import 'package:provider/provider.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:weakest_link/classes/player.dart';
 import 'package:weakest_link/classes/question.dart';
@@ -49,6 +48,10 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   // Animation logic for the starting lights
   late AnimationController _startLightsController;
 
+  // Animation for the glowing money ladder
+  late AnimationController _ladderPulseController;
+  late Animation<double> _ladderPulseAnimation;
+
   // Question logic
   late Question _currentQuestion;
 
@@ -75,6 +78,18 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
     _startLightsController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1250),
+    );
+
+    _ladderPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    _ladderPulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _ladderPulseController,
+        curve: Curves.easeInOut,
+      ),
     );
 
     _startLightsController.addStatusListener((status) {
@@ -110,6 +125,7 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
   void dispose() {
     _timer?.cancel();
     _startLightsController.dispose();
+    _ladderPulseController.dispose();
     super.dispose();
   }
 
@@ -163,8 +179,6 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final gameManager = Provider.of<GameManager>(context);
-
     if (_isStarting) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -195,6 +209,8 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.black,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -203,243 +219,370 @@ class _PlayingRoundState extends State<PlayingRound> with TickerProviderStateMix
                 translate('rounds.banked', args: {'points': _roundBankedPoints}),
                 maxLines: 1,
                 minFontSize: 10,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
               ),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: _remainingSeconds < 10 ? Colors.red : Colors.black87,
-                borderRadius: BorderRadius.circular(8),
+                gradient: LinearGradient(
+                  colors: _remainingSeconds < 10
+                      ? [Colors.redAccent, Colors.red]
+                      : [Colors.blueAccent, Colors.lightBlueAccent],
+                ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: _remainingSeconds < 10
+                        ? Colors.redAccent.withOpacity(0.8)
+                        : Colors.blueAccent.withOpacity(0.8),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ],
               ),
               child: Text(
                 timeStr,
-                style: const TextStyle(color: Colors.white, fontFamily: 'Courier', fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Courier',
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
               ),
             ),
           ],
         ),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        automaticallyImplyLeading: false,
       ),
-      body: Row(
-        children: [
-          // Points Scale Sidebar
-          Container(
-            width: 100,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(right: BorderSide(color: Theme.of(context).dividerColor)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_pointsScale.length, (index) {
-                int reverseIndex = _pointsScale.length - 1 - index;
-                if (reverseIndex == 0) return const SizedBox.shrink();
-                
-                bool isTarget = _currentChainIndex == reverseIndex;
-                return Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: isTarget 
-                          ? Theme.of(context).colorScheme.primary 
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                      border: isTarget ? null : Border.all(color: Colors.grey.withOpacity(0.3)),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${_pointsScale[reverseIndex]}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isTarget 
-                              ? Theme.of(context).colorScheme.onPrimary 
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment(0.0, -0.6),
+            radius: 1.2,
+            colors: [
+              Color(0xFF0A0F24),
+              Colors.black,
+            ],
           ),
-          
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-              child: Column(
-                children: [
-                  // Player Turn Indicator
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: currentPlayer.color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: currentPlayer.color, width: 3),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(translate('rounds.current_player'), style: const TextStyle(fontSize: 12, letterSpacing: 2)),
-                        Text(
-                          currentPlayer.name.toUpperCase(),
-                          textAlign: TextAlign.center,
-                          style: (isLandscape ? Theme.of(context).textTheme.headlineSmall : Theme.of(context).textTheme.headlineMedium)?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: currentPlayer.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  
-                  // Question & Answer
-                  Text(
-                    _currentQuestion.title,
-                    textAlign: TextAlign.center,
-                    style: (isLandscape ? Theme.of(context).textTheme.titleLarge : Theme.of(context).textTheme.headlineSmall)?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  !showAnswer ? FilledButton.tonalIcon(
-                    onPressed: () {
-                      setState(() {
-                        _showAnswer = true;
-                      });
-                    },
-                    label: Text(translate('rounds.reveal_answer'),
-                    ),
-                    icon: const Icon(Icons.remove_red_eye_rounded)
-                  ) :
-                  Text(
-                    "(${_currentQuestion.answer})",
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.grey,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  const Spacer(),
+        ),
+        child: Row(
+          children: [
+            // Points Scale Sidebar
+            Container(
+              width: 110,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF02030A),
+                    Color(0xFF050B19),
+                  ],
+                ),
+              ),
+              child: AnimatedBuilder(
+                animation: _ladderPulseAnimation,
+                builder: (context, _) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(_pointsScale.length, (index) {
+                      int reverseIndex = _pointsScale.length - 1 - index;
+                      if (reverseIndex == 0) return const SizedBox.shrink();
+                      
+                      bool isTarget = _currentChainIndex == reverseIndex;
+                      final baseColor = isTarget
+                          ? Colors.cyanAccent
+                          : Colors.blueGrey.shade700;
+                      final glowStrength = isTarget ? _ladderPulseAnimation.value : 0.0;
 
-                  if (_isTimeOver)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 24.0),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 400),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: FilledButton(
-                              onPressed: () {
-                                GameManager().addBankedPoints(_roundBankedPoints);
-                                GameManager().determineLinks();
-                                
-                                if (_activePlayers.length == 2) {
-                                  // This was the decisive round.
-                                  // No one is voted out. Skip voting phase.
-                                  GameManager().resetRoundStats();
-                                  GameManager().incrementRoundNumber();
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                      builder: (context) => RoundStart(
-                                        players: GameManager().players,
-                                        questions: GameManager().allQuestions,
-                                        roundNumber: GameManager().roundNumber,
-                                      ),
+                      return Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 3,
+                            horizontal: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: baseColor.withOpacity(0.7),
+                              width: 1.5,
+                            ),
+                            boxShadow: isTarget
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.cyanAccent
+                                          .withOpacity(0.6 * (0.4 + glowStrength)),
+                                      blurRadius: 16 + (8 * glowStrength),
+                                      spreadRadius: 1.5 + glowStrength,
                                     ),
-                                  );
-                                } else {
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                      builder: (context) => VotingPhase(
-                                        players: widget.players,
-                                        strongestLink: GameManager().strongestLink!,
-                                        weakestLink: GameManager().weakestLink!,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: Text(
-                                translate('rounds.next'),
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ]
+                                : [],
+                            gradient: LinearGradient(
+                              colors: isTarget
+                                  ? [
+                                      Color(0xFF081E3F),
+                                      Color(0xFF0D4E89),
+                                    ]
+                                  : [
+                                      Color(0xFF020814),
+                                      Color(0xFF02101F),
+                                    ],
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${_pointsScale[reverseIndex]}',
+                              style: TextStyle(
+                                fontSize: isTarget ? 20 : 16,
+                                fontWeight: FontWeight.bold,
+                                color: isTarget
+                                    ? Colors.cyanAccent
+                                    : Colors.blueGrey.shade200,
                               ),
                             ),
                           ),
+                        ),
+                      );
+                    }),
+                  );
+                },
+              ),
+            ),
+            
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 32.0,
+                ),
+                child: Column(
+                  children: [
+                    // Player Turn Indicator
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(40),
+                        gradient: LinearGradient(
+                          colors: [
+                            currentPlayer.color.withOpacity(0.7),
+                            currentPlayer.color.withOpacity(0.15),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: currentPlayer.color.withOpacity(0.7),
+                            blurRadius: 18,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                        border: Border.all(
+                          color: currentPlayer.color,
+                          width: 2.5,
                         ),
                       ),
-                    ),
-                  
-                  // Action Grid
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 600),
-                      child: GridView.count(
-                        shrinkWrap: true,
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: isLandscape ? 4.5 : 2.5,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          ElevatedButton.icon(
-                            onPressed: _isRoundActive ? _handleCorrect : null,
-                            icon: const Icon(Icons.check_circle),
-                            label: Text(translate('rounds.correct')),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                          Text(
+                            translate('rounds.current_player'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              letterSpacing: 3,
+                              color: Colors.white70,
                             ),
                           ),
-                          ElevatedButton.icon(
-                            onPressed: _isRoundActive ? _handleWrong : null,
-                            icon: const Icon(Icons.cancel),
-                            label: Text(translate('rounds.wrong')),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          FilledButton.tonalIcon(
-                            onPressed: (_isRoundActive && _currentChainIndex > 0) ? _handleBank : null,
-                            icon: const Icon(Icons.account_balance),
-                            label: Text(translate('rounds.bank')),
-                            style: FilledButton.styleFrom(
-                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: _isRoundActive ? _handleBurn : null,
-                            icon: const Icon(Icons.local_fire_department),
-                            label: Text(translate('rounds.burn')),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.orange, width: 2),
-                              foregroundColor: Colors.orange.shade800,
-                              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                          const SizedBox(height: 6),
+                          Text(
+                            currentPlayer.name.toUpperCase(),
+                            textAlign: TextAlign.center,
+                            style: (isLandscape
+                                    ? Theme.of(context).textTheme.headlineSmall
+                                    : Theme.of(context).textTheme.headlineMedium)
+                                ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 4,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
+                    const Spacer(),
+                    
+                    // Question & Answer
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF020812).withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.blueGrey.shade700,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _currentQuestion.title,
+                            textAlign: TextAlign.center,
+                            style: (isLandscape
+                                    ? Theme.of(context).textTheme.titleLarge
+                                    : Theme.of(context).textTheme.headlineSmall)
+                                ?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          !showAnswer
+                              ? FilledButton.tonalIcon(
+                                  onPressed: () {
+                                    setState(() {
+                                      _showAnswer = true;
+                                    });
+                                  },
+                                  icon: const Icon(Icons.remove_red_eye_rounded),
+                                  label: Text(
+                                    translate('rounds.reveal_answer'),
+                                  ),
+                                )
+                              : Text(
+                                  "(${_currentQuestion.answer})",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                        color: Colors.blueGrey.shade200,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+
+                    if (_isTimeOver)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 24.0),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 400),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: FilledButton(
+                                onPressed: () {
+                                  GameManager().addBankedPoints(_roundBankedPoints);
+                                  GameManager().determineLinks();
+                                  
+                                  if (_activePlayers.length == 2) {
+                                    // This was the decisive round.
+                                    // No one is voted out. Skip voting phase.
+                                    GameManager().resetRoundStats();
+                                    GameManager().incrementRoundNumber();
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) => RoundStart(
+                                          players: GameManager().players,
+                                          questions: GameManager().allQuestions,
+                                          roundNumber: GameManager().roundNumber,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) => VotingPhase(
+                                          players: widget.players,
+                                          strongestLink: GameManager().strongestLink!,
+                                          weakestLink: GameManager().weakestLink!,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                child: Text(
+                                  translate('rounds.next'),
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    
+                    // Action Grid
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: GridView.count(
+                          shrinkWrap: true,
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: isLandscape ? 4.5 : 2.5,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _isRoundActive ? _handleCorrect : null,
+                              icon: const Icon(Icons.check_circle),
+                              label: Text(translate('rounds.correct')),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.greenAccent.shade400,
+                                foregroundColor: Colors.black,
+                                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: _isRoundActive ? _handleWrong : null,
+                              icon: const Icon(Icons.cancel),
+                              label: Text(translate('rounds.wrong')),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent.shade400,
+                                foregroundColor: Colors.white,
+                                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            FilledButton.tonalIcon(
+                              onPressed: (_isRoundActive && _currentChainIndex > 0) ? _handleBank : null,
+                              icon: const Icon(Icons.account_balance),
+                              label: Text(translate('rounds.bank')),
+                              style: FilledButton.styleFrom(
+                                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _isRoundActive ? _handleBurn : null,
+                              icon: const Icon(Icons.local_fire_department),
+                              label: Text(translate('rounds.burn')),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.orange, width: 2),
+                                foregroundColor: Colors.orange.shade400,
+                                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

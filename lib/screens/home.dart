@@ -63,7 +63,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       child: Scaffold(
         appBar: AppBar(
           title: Text(translate('app_title')),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          backgroundColor: Colors.black,
           actions: [
             if (_isEditingPlayers)
               IconButton(
