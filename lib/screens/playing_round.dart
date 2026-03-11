@@ -603,16 +603,18 @@ class StartingLightsPainter extends CustomPainter {
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round;
 
-    for (int i = 0; i < 8; i++) {
-      final angle = i * math.pi / 4;
+    for (int i = 0; i < 12; i++) {
+      final angle = i * math.pi / 6;
       Color color = Colors.grey.withOpacity(0.1);
-      if (progress > 0.66) {
+
+      final pairIndex = i % 6;
+      if (progress > 0.85) {
         color = Colors.indigo;
-      } else if (progress > 0.33) {
-        if (i == 0 || i == 4 || i == 5 || i == 7) color = Colors.lightBlueAccent;
-      } else if (progress > 0) {
-        if (i == 0 || i == 4) color = Colors.lightBlueAccent;
       }
+      else if (progress > (pairIndex + 2) * 0.1) {
+        color = Colors.lightBlueAccent;
+      }
+
       paint.color = color;
       final start = Offset(
         center.dx + (radius - lineLength / 2) * math.cos(angle),

@@ -164,8 +164,8 @@ class _RoundStartState extends State<RoundStart>
                               .textTheme
                               .titleLarge
                               ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 3,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0,
                               ),
                         ),
                       ),
@@ -366,6 +366,9 @@ class _RoundStartState extends State<RoundStart>
                       width: double.infinity,
                       height: 60,
                       child: FilledButton.tonal(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.lightBlueAccent
+                        ),
                         onPressed:
                             (_isLastRound && _playFirst == null)
                                 ? null
