@@ -629,7 +629,7 @@ class StartingLightsPainter extends CustomPainter {
     
     final textPainter = TextPainter(
       text: TextSpan(
-        text: "ROUND $roundNumber",
+        text: translate('round_start.round', args: {'number': roundNumber}),
         style: const TextStyle(
           color: Colors.white,
           fontSize: 28,
