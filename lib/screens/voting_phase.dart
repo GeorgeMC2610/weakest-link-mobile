@@ -171,6 +171,8 @@ class _VotingPhaseState extends State<VotingPhase> {
                         ),
                   ),
                   const SizedBox(height: 8),
+
+                  if (!GameManager().hostMode)
                   FilledButton.tonalIcon(
                     icon:
                         Icon(showLinks ? Icons.visibility_off : Icons.visibility),
@@ -206,14 +208,7 @@ class _VotingPhaseState extends State<VotingPhase> {
                           Colors.black.withOpacity(0.7),
                         ],
                       ),
-                      border: Border.all(
-                        color: isWeakest
-                            ? Colors.redAccent
-                            : (isStrongest
-                                ? Colors.cyanAccent
-                                : Colors.blueGrey.shade700),
-                        width: isWeakest || isStrongest ? 2 : 1,
-                      ),
+                      border: getBorder(isWeakest, isStrongest)
                     ),
                     child: ListTile(
                       onTap: () => _handleVote(player),
@@ -322,6 +317,24 @@ class _VotingPhaseState extends State<VotingPhase> {
           ],
         ),
       ),
+    );
+  }
+
+  Border getBorder(bool isWeakest, bool isStrongest) {
+    if (showLinks) {
+      return Border.all(
+        color: isWeakest
+            ? Colors.redAccent
+            : (isStrongest
+            ? Colors.cyanAccent
+            : Colors.blueGrey.shade700),
+        width: isWeakest || isStrongest ? 2 : 1,
+      );
+    }
+
+    return Border.all(
+      color: Colors.blueGrey.shade700,
+      width: 1,
     );
   }
 }
